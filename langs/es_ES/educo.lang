@@ -1,0 +1,10 @@
+# Dolibarr language file - es_ES - help 
+CHARSET=UTF-8
+Module500001Name=Educo
+AddEstudiante=Nuevo Estudiante
+#UserTitle=Genero
+DocType=Tipo Documento
+DocCode=Numero Documento
+RC=Registro Civil
+TI=Targeta Identidad
+CC=Cedula Ciudadania
