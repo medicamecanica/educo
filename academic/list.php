@@ -607,8 +607,6 @@ else
 {
     print '<br><a name="show_files"></a><a href="'.$_SERVER["PHP_SELF"].'?show_files=1'.$param.'#show_files">'.$langs->trans("ShowTempMassFilesArea").'</a>';
 }
-
-
 // End of page
 llxFooter();
 $db->close();

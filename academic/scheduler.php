@@ -121,7 +121,6 @@ print 'materias: '. $form->selectarray('subject', array()).'<br>';
              newEvent.end = moment(end).format();
             newEvent.allDay = false;
             $('#calendar').fullCalendar('renderEvent', newEvent);
-
         },
         // snapDuration:"00:30",
         // titleFormat: "[<?php print $medico->firstname . ' ' . $medico->lastname . ' ' . $medico->job; ?>, citas] D [de] MMMM YYYY",

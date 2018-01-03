@@ -383,8 +383,6 @@ print '<tr><td class="fieldrequired">'.$langs->trans("Fieldstatus").'</td><td>'.
 	//$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 
 }
-
-
 // End of page
 llxFooter();
 $db->close();
