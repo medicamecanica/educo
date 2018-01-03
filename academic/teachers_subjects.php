@@ -19,10 +19,10 @@
  */
 
 /**
- *   	\file       educo/educoacadyear_list.php
+ *   	\file       educo/educoteachersubject_list.php
  *		\ingroup    educo
  *		\brief      This file is an example of a php page
- *					Initialy built by build_class_from_table on 2017-12-28 13:49
+ *					Initialy built by build_class_from_table on 2018-01-02 19:36
  */
 
 //if (! defined('NOREQUIREUSER'))  define('NOREQUIREUSER','1');
@@ -48,7 +48,7 @@ if (! $res) die("Include of main fails");
 require_once(DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
-dol_include_once('/educo/class/educoacadyear.class.php');
+dol_include_once('/educo/class/educoteachersubject.class.php');
 
 // Load traductions files requiredby by page
 $langs->load("educo");
@@ -63,13 +63,17 @@ $toselect = GETPOST('toselect', 'array');
 $id			= GETPOST('id','int');
 $backtopage = GETPOST('backtopage');
 $myparam	= GETPOST('myparam','alpha');
-
+include_once DOL_DOCUMENT_ROOT.'/educo/tpl/list_teachersubject_init.php';
 $search_all=trim(GETPOST("sall"));
 
 $search_ref=GETPOST('search_ref','alpha');
-$search_note_private=GETPOST('search_note_private','alpha');
-$search_note_public=GETPOST('search_note_public','alpha');
+$search_label=GETPOST('search_label','alpha');
 $search_status=GETPOST('search_status','int');
+$search_asignature_code=GETPOST('search_asignature_code','alpha');
+$search_fk_user=GETPOST('search_fk_user','int');
+$search_fk_academicyear=GETPOST('search_fk_academicyear','int');
+$search_entity=GETPOST('search_entity','int');
+$search_hours=GETPOST('search_hours','int');
 
 
 $search_myfield=GETPOST('search_myfield');
@@ -117,9 +121,13 @@ if (empty($user->socid)) $fieldstosearchall["t.note_private"]="NotePrivate";
 $arrayfields=array(
     
 't.ref'=>array('label'=>$langs->trans("Fieldref"), 'checked'=>1),
-'t.note_private'=>array('label'=>$langs->trans("Fieldnote_private"), 'checked'=>1),
-'t.note_public'=>array('label'=>$langs->trans("Fieldnote_public"), 'checked'=>1),
+'t.label'=>array('label'=>$langs->trans("Fieldlabel"), 'checked'=>1),
 't.status'=>array('label'=>$langs->trans("Fieldstatus"), 'checked'=>1),
+'t.asignature_code'=>array('label'=>$langs->trans("Fieldasignature_code"), 'checked'=>1),
+'t.fk_user'=>array('label'=>$langs->trans("Fieldfk_user"), 'checked'=>1),
+'t.fk_academicyear'=>array('label'=>$langs->trans("Fieldfk_academicyear"), 'checked'=>1),
+'t.entity'=>array('label'=>$langs->trans("Fieldentity"), 'checked'=>1),
+'t.hours'=>array('label'=>$langs->trans("Fieldhours"), 'checked'=>1),
 
     
     //'t.entity'=>array('label'=>$langs->trans("Entity"), 'checked'=>1, 'enabled'=>(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode))),
@@ -138,7 +146,7 @@ if (is_array($extrafields->attribute_label) && count($extrafields->attribute_lab
 
 
 // Load object if id or ref is provided as parameter
-$object=new Educoacadyear($db);
+$object=new Educoteachersubject($db);
 if (($id > 0 || ! empty($ref)) && $action != 'add')
 {
 	$result=$object->fetch($id,$ref);
@@ -171,9 +179,13 @@ if (empty($reshook))
     {
     	
 $search_ref='';
-$search_note_private='';
-$search_note_public='';
+$search_label='';
 $search_status='';
+$search_asignature_code='';
+$search_fk_user='';
+$search_fk_academicyear='';
+$search_entity='';
+$search_hours='';
 
     	
     	$search_date_creation='';
@@ -189,6 +201,7 @@ $search_status='';
     $permtodelete = $user->rights->educo->delete;
     $uploaddir = $conf->educo->dir_output;
     include DOL_DOCUMENT_ROOT.'/core/actions_massactions.inc.php';
+     include DOL_DOCUMENT_ROOT.'/educo/tpl/list_teachersubject_add.php';
 }
 
 
@@ -209,33 +222,21 @@ $title = $langs->trans('MyModuleListTitle');
 
 // Put here content of your page
 
-// Example : Adding jquery code
-print '<script type="text/javascript" language="javascript">
-jQuery(document).ready(function() {
-	function init_myfunc()
-	{
-		jQuery("#myid").removeAttr(\'disabled\');
-		jQuery("#myid").attr(\'disabled\',\'disabled\');
-	}
-	init_myfunc();
-	jQuery("#mybutton").click(function() {
-		init_myfunc();
-	});
-});
-</script>';
 
 
 $sql = "SELECT";
 $sql.= " t.rowid,";
 
 		$sql .= " t.ref,";
-		$sql .= " t.datestart,";
-		$sql .= " t.dateend,";
+		$sql .= " t.label,";
+		$sql .= " t.status,";
 		$sql .= " t.datec,";
 		$sql .= " t.tms,";
-		$sql .= " t.note_private,";
-		$sql .= " t.note_public,";
-		$sql .= " t.status";
+		$sql .= " t.asignature_code,";
+		$sql .= " t.fk_user,";
+		$sql .= " t.fk_academicyear,";
+		$sql .= " t.entity,";
+		$sql .= " t.hours";
 
 
 // Add fields from extrafields
@@ -244,15 +245,19 @@ foreach ($extrafields->attribute_label as $key => $val) $sql.=($extrafields->att
 $parameters=array();
 $reshook=$hookmanager->executeHooks('printFieldListSelect',$parameters);    // Note that $action and $object may have been modified by hook
 $sql.=$hookmanager->resPrint;
-$sql.= " FROM ".MAIN_DB_PREFIX."educo_acad_year as t";
-if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label)) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."educo_acad_year_extrafields as ef on (t.rowid = ef.fk_object)";
+$sql.= " FROM ".MAIN_DB_PREFIX."educo_teacher_subject as t";
+if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label)) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."educo_teacher_subject_extrafields as ef on (t.rowid = ef.fk_object)";
 $sql.= " WHERE 1 = 1";
 //$sql.= " WHERE u.entity IN (".getEntity('mytable',1).")";
 
 if ($search_ref) $sql.= natural_search("ref",$search_ref);
-if ($search_note_private) $sql.= natural_search("note_private",$search_note_private);
-if ($search_note_public) $sql.= natural_search("note_public",$search_note_public);
+if ($search_label) $sql.= natural_search("label",$search_label);
 if ($search_status) $sql.= natural_search("status",$search_status);
+if ($search_asignature_code) $sql.= natural_search("asignature_code",$search_asignature_code);
+if ($search_fk_user) $sql.= natural_search("fk_user",$search_fk_user);
+if ($search_fk_academicyear) $sql.= natural_search("fk_academicyear",$search_fk_academicyear);
+if ($search_entity) $sql.= natural_search("entity",$search_entity);
+if ($search_hours) $sql.= natural_search("hours",$search_hours);
 
 
 if ($sall)          $sql.= natural_search(array_keys($fieldstosearchall), $sall);
@@ -301,12 +306,35 @@ if ($num == 1 && ! empty($conf->global->MAIN_SEARCH_DIRECT_OPEN_IF_ONLY_ONE) && 
 {
     $obj = $db->fetch_object($resql);
     $id = $obj->rowid;
-    header("Location: ".DOL_URL_ROOT.'/educoacadyear/card.php?id='.$id);
+    header("Location: ".DOL_URL_ROOT.'/educoteachersubject/card.php?id='.$id);
     exit;
 }
 
 llxHeader('', $title, $help_url);
-
+print '<script type="text/javascript" language="javascript">
+$(document).ready(function() {
+	function init_myfunc()
+	{
+		$("#myid").removeAttr(\'disabled\');
+		$("#myid").attr(\'disabled\',\'disabled\');
+	}
+	init_myfunc();
+	$("#mybutton").click(function() {
+		init_myfunc();
+	});
+        
+       $("#fk_user").change(function() {
+              //  $("#$user_login").val("");
+		$("#user_login").val($(this).select2("data").text);
+                //console.log($(this).select2("data").text);
+	});
+        $("#asignature_code").change(function() {
+              //  $("#$user_login").val("");
+		$("#asignature_label").val($(this).select2("data").text);
+                //console.log($(this).select2("data").text);
+	});
+});
+</script>';
 $arrayofselected=is_array($toselect)?$toselect:array();
 
 $param='';
@@ -367,7 +395,7 @@ if (! empty($moreforfilter))
 
 $varpage=empty($contextpage)?$_SERVER["PHP_SELF"]:$contextpage;
 $selectedfields=$form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage);	// This also change content of $arrayfields
-
+include DOL_DOCUMENT_ROOT.'/educo/tpl/list_teachersubject_create.php';
 print '<div class="div-table-responsive">';
 print '<table class="tagtable liste'.($moreforfilter?" listwithfilterbefore":"").'">'."\n";
 
@@ -375,9 +403,13 @@ print '<table class="tagtable liste'.($moreforfilter?" listwithfilterbefore":"")
 print '<tr class="liste_titre">';
 // 
 if (! empty($arrayfields['t.ref']['checked'])) print_liste_field_titre($arrayfields['t.ref']['label'],$_SERVER['PHP_SELF'],'t.ref','',$params,'',$sortfield,$sortorder);
-if (! empty($arrayfields['t.note_private']['checked'])) print_liste_field_titre($arrayfields['t.note_private']['label'],$_SERVER['PHP_SELF'],'t.note_private','',$params,'',$sortfield,$sortorder);
-if (! empty($arrayfields['t.note_public']['checked'])) print_liste_field_titre($arrayfields['t.note_public']['label'],$_SERVER['PHP_SELF'],'t.note_public','',$params,'',$sortfield,$sortorder);
+if (! empty($arrayfields['t.label']['checked'])) print_liste_field_titre($arrayfields['t.label']['label'],$_SERVER['PHP_SELF'],'t.label','',$params,'',$sortfield,$sortorder);
 if (! empty($arrayfields['t.status']['checked'])) print_liste_field_titre($arrayfields['t.status']['label'],$_SERVER['PHP_SELF'],'t.status','',$params,'',$sortfield,$sortorder);
+if (! empty($arrayfields['t.asignature_code']['checked'])) print_liste_field_titre($arrayfields['t.asignature_code']['label'],$_SERVER['PHP_SELF'],'t.asignature_code','',$params,'',$sortfield,$sortorder);
+if (! empty($arrayfields['t.fk_user']['checked'])) print_liste_field_titre($arrayfields['t.fk_user']['label'],$_SERVER['PHP_SELF'],'t.fk_user','',$params,'',$sortfield,$sortorder);
+if (! empty($arrayfields['t.fk_academicyear']['checked'])) print_liste_field_titre($arrayfields['t.fk_academicyear']['label'],$_SERVER['PHP_SELF'],'t.fk_academicyear','',$params,'',$sortfield,$sortorder);
+if (! empty($arrayfields['t.entity']['checked'])) print_liste_field_titre($arrayfields['t.entity']['label'],$_SERVER['PHP_SELF'],'t.entity','',$params,'',$sortfield,$sortorder);
+if (! empty($arrayfields['t.hours']['checked'])) print_liste_field_titre($arrayfields['t.hours']['label'],$_SERVER['PHP_SELF'],'t.hours','',$params,'',$sortfield,$sortorder);
 
 //if (! empty($arrayfields['t.field1']['checked'])) print_liste_field_titre($arrayfields['t.field1']['label'],$_SERVER['PHP_SELF'],'t.field1','',$param,'',$sortfield,$sortorder);
 //if (! empty($arrayfields['t.field2']['checked'])) print_liste_field_titre($arrayfields['t.field2']['label'],$_SERVER['PHP_SELF'],'t.field2','',$param,'',$sortfield,$sortorder);
@@ -407,9 +439,13 @@ print '</tr>'."\n";
 print '<tr class="liste_titre">';
 // 
 if (! empty($arrayfields['t.ref']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_ref" value="'.$search_ref.'" size="10"></td>';
-if (! empty($arrayfields['t.note_private']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_note_private" value="'.$search_note_private.'" size="10"></td>';
-if (! empty($arrayfields['t.note_public']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_note_public" value="'.$search_note_public.'" size="10"></td>';
+if (! empty($arrayfields['t.label']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_label" value="'.$search_label.'" size="10"></td>';
 if (! empty($arrayfields['t.status']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_status" value="'.$search_status.'" size="10"></td>';
+if (! empty($arrayfields['t.asignature_code']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_asignature_code" value="'.$search_asignature_code.'" size="10"></td>';
+if (! empty($arrayfields['t.fk_user']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_fk_user" value="'.$search_fk_user.'" size="10"></td>';
+if (! empty($arrayfields['t.fk_academicyear']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_fk_academicyear" value="'.$search_fk_academicyear.'" size="10"></td>';
+if (! empty($arrayfields['t.entity']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_entity" value="'.$search_entity.'" size="10"></td>';
+if (! empty($arrayfields['t.hours']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_hours" value="'.$search_hours.'" size="10"></td>';
 
 //if (! empty($arrayfields['t.field1']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_field1" value="'.$search_field1.'" size="10"></td>';
 //if (! empty($arrayfields['t.field2']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_field2" value="'.$search_field2.'" size="10"></td>';
@@ -483,15 +519,7 @@ while ($i < min($num, $limit))
         foreach ($arrayfields as $key => $value) {
         	if (!empty($arrayfields[$key]['checked'])) {
                 	$key2 = str_replace('t.', '', $key);
-                        $html='';
-                        switch ($key2):
-                            case 'ref': $object->ref=$obj->ref;
-                                 $object->id=$obj->rowid;
-                                $html=$object->getNomUrl(1);
-                                break;
-                            default :$html=$obj->$key2;
-                        endswitch;
-                	print '<td>' .$html  . '</td>';
+                	print '<td>' . $obj->$key2 . '</td>';
                 	if (!$i)
                     	$totalarray['nbfield'] ++;
             	}
@@ -522,7 +550,7 @@ while ($i < min($num, $limit))
         if (! empty($arrayfields['t.datec']['checked']))
         {
             print '<td align="center">';
-            print dol_print_date($db->jdate($obj->date_creation), 'dayhour');
+            print dol_print_date($db->jdate($obj->date_creation), 'dayhours');
             print '</td>';
 		    if (! $i) $totalarray['nbfield']++;
         }
@@ -530,7 +558,7 @@ while ($i < min($num, $limit))
         if (! empty($arrayfields['t.tms']['checked']))
         {
             print '<td align="center">';
-            print dol_print_date($db->jdate($obj->date_update), 'dayhour');
+            print dol_print_date($db->jdate($obj->date_update), 'dayhours');
             print '</td>';
 		    if (! $i) $totalarray['nbfield']++;
         }

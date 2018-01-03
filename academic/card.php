@@ -45,6 +45,7 @@ if (! $res) die("Include of main fails");
 // Change this following line to use the correct relative path from htdocs
 include_once(DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
+dol_include_once('/educo/lib/educo.lib.php');
 
 // Load traductions files requiredby by page
 $langs->load("educo");
@@ -106,7 +107,7 @@ if (empty($reshook))
 	{
 		if ($action != 'addlink')
 		{
-			$urltogo=$backtopage?$backtopage:dol_buildpath('/educo/list.php',1);
+			$urltogo=$backtopage?$backtopage:dol_buildpath('/educo/academic/list.php',1);
 			header("Location: ".$urltogo);
 			exit;
 		}		
@@ -119,7 +120,7 @@ if (empty($reshook))
 	{
 		if (GETPOST('cancel'))
 		{
-			$urltogo=$backtopage?$backtopage:dol_buildpath('/educo/list.php',1);
+			$urltogo=$backtopage?$backtopage:dol_buildpath('/educo/academic/list.php',1);
 			header("Location: ".$urltogo);
 			exit;
 		}
@@ -128,12 +129,14 @@ if (empty($reshook))
 
 		/* object_prop_getpost_prop */
 		
-	$object->ref=GETPOST('ref','alpha');
-        $object->datestart= dol_mktime(0, 0, 0, GETPOST(), GETPOST(), GETPOST());
-        $object->dateend= dol_mktime(0, 0, 0, GETPOST(), GETPOST(), GETPOST());
+	$object->ref= explode('/',GETPOST('datestart','alpha'))[2];
+        $object->datestart= dol_mktime(0, 0, 0, GETPOST('datestartmonth'),GETPOST('datestartday'), GETPOST('datestartyear'));
+        $object->dateend= dol_mktime(0, 0, 0, GETPOST('dateendmonth'),GETPOST('dateendday'),  GETPOST('dateendyear'));
 	$object->note_private=GETPOST('note_private','alpha');
 	$object->note_public=GETPOST('note_public','alpha');
-	$object->status=GETPOST('status','int');
+	$object->status=0;
+        $object->datec= dol_now();
+          $object->tms= dol_now();
 
 		
 
@@ -149,7 +152,7 @@ if (empty($reshook))
 			if ($result > 0)
 			{
 				// Creation OK
-				$urltogo=$backtopage?$backtopage:dol_buildpath('/educo/list.php',1);
+				$urltogo=$backtopage?$backtopage:dol_buildpath('/educo/academic/list.php',1);
 				header("Location: ".$urltogo);
 				exit;
 			}
@@ -172,7 +175,7 @@ if (empty($reshook))
 		$error=0;
 
 		
-	$object->ref=GETPOST('ref','alpha');
+	
 	$object->note_private=GETPOST('note_private','alpha');
 	$object->note_public=GETPOST('note_public','alpha');
 	$object->status=GETPOST('status','int');
@@ -214,7 +217,7 @@ if (empty($reshook))
 		{
 			// Delete OK
 			setEventMessages("RecordDeleted", null, 'mesgs');
-			header("Location: ".dol_buildpath('/educo/list.php',1));
+			header("Location: ".dol_buildpath('/educo/academic/list.php',1));
 			exit;
 		}
 		else
@@ -237,7 +240,7 @@ if (empty($reshook))
 llxHeader('','MyPageName','');
 
 $form=new Form($db);
-
+$head=academicyear_header($object);
 
 // Put here content of your page
 
@@ -273,10 +276,10 @@ if ($action == 'create')
 	// 
 print '<tr><td class="fieldrequired">'.$langs->trans("Fielddatestart").'</td>'
         . '<td>';
-print $form->select_date($datestart,'datestart').'</td></tr>';
+print $form->select_date($object->datestart,'datestart').'</td></tr>';
 print '<tr><td class="fieldrequired">'.$langs->trans("Fielddatestart").'</td>'
         . '<td>';
-print $form->select_date($dateend,'dateend').'</td></tr>';
+print $form->select_date($object->dateend,'dateend').'</td></tr>';
 print '<tr><td class="fieldrequired">'.$langs->trans("Fieldnote_private").'</td><td><input class="flat" type="text" name="note_private" value="'.GETPOST('note_private').'"></td></tr>';
 print '<tr><td class="fieldrequired">'.$langs->trans("Fieldnote_public").'</td><td><input class="flat" type="text" name="note_public" value="'.GETPOST('note_public').'"></td></tr>';
 
@@ -333,7 +336,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			
 	print load_fiche_titre($langs->trans("MyModule"));
     
-	dol_fiche_head();
+	dol_fiche_head($head);
 
 	if ($action == 'delete') {
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteMyOjbect'), $langs->trans('ConfirmDeleteMyObject'), 'confirm_delete', '', 0, 1);

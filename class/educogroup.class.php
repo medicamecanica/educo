@@ -20,7 +20,7 @@
  */
 
 /**
- * \file    educo/educoacadyear.class.php
+ * \file    educo/educogroup.class.php
  * \ingroup educo
  * \brief   This file is an example for a CRUD class file (Create/Read/Update/Delete)
  *          Put some comments here
@@ -32,25 +32,25 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 
 /**
- * Class Educoacadyear
+ * Class Educogroup
  *
  * Put here description of your class
  *
  * @see CommonObject
  */
-class Educoacadyear extends CommonObject
+class Educogroup extends CommonObject
 {
 	/**
 	 * @var string Id to identify managed objects
 	 */
-	public $element = 'educoacadyear';
+	public $element = 'educogroup';
 	/**
 	 * @var string Name of table without prefix where object is stored
 	 */
-	public $table_element = 'educo_acad_year';
+	public $table_element = 'educo_group';
 
 	/**
-	 * @var EducoacadyearLine[] Lines
+	 * @var EducogroupLine[] Lines
 	 */
 	public $lines = array();
 
@@ -58,13 +58,14 @@ class Educoacadyear extends CommonObject
 	 */
 	
 	public $ref;
-	public $datestart = '';
-	public $dateend = '';
-	public $datec = '';
+	public $sufix;
+	public $label;
+	public $fk_academicyear;
+	public $grado_code;
 	public $tms = '';
-	public $note_private;
-	public $note_public;
-	public $status;
+	public $date_create = '';
+	public $statut;
+	public $import_key;
 
 	/**
 	 */
@@ -99,14 +100,23 @@ class Educoacadyear extends CommonObject
 		if (isset($this->ref)) {
 			 $this->ref = trim($this->ref);
 		}
-		if (isset($this->note_private)) {
-			 $this->note_private = trim($this->note_private);
+		if (isset($this->sufix)) {
+			 $this->sufix = trim($this->sufix);
 		}
-		if (isset($this->note_public)) {
-			 $this->note_public = trim($this->note_public);
+		if (isset($this->label)) {
+			 $this->label = trim($this->label);
 		}
-		if (isset($this->status)) {
-			 $this->status = trim($this->status);
+		if (isset($this->fk_academicyear)) {
+			 $this->fk_academicyear = trim($this->fk_academicyear);
+		}
+		if (isset($this->grado_code)) {
+			 $this->grado_code = trim($this->grado_code);
+		}
+		if (isset($this->statut)) {
+			 $this->statut = trim($this->statut);
+		}
+		if (isset($this->import_key)) {
+			 $this->import_key = trim($this->import_key);
 		}
 
 		
@@ -118,23 +128,25 @@ class Educoacadyear extends CommonObject
 		$sql = 'INSERT INTO ' . MAIN_DB_PREFIX . $this->table_element . '(';
 		
 		$sql.= 'ref,';
-		$sql.= 'datestart,';
-		$sql.= 'dateend,';
-		$sql.= 'datec,';
-		$sql.= 'note_private,';
-		$sql.= 'note_public,';
-		$sql.= 'status';
+		$sql.= 'sufix,';
+		$sql.= 'label,';
+		$sql.= 'fk_academicyear,';
+		$sql.= 'grado_code,';
+		$sql.= 'date_create,';
+		$sql.= 'statut,';
+		$sql.= 'import_key';
 
 		
 		$sql .= ') VALUES (';
 		
 		$sql .= ' '.(! isset($this->ref)?'NULL':"'".$this->db->escape($this->ref)."'").',';
-		$sql .= ' '.(! isset($this->datestart) || dol_strlen($this->datestart)==0?'NULL':"'".$this->db->idate($this->datestart)."'").',';
-		$sql .= ' '.(! isset($this->dateend) || dol_strlen($this->dateend)==0?'NULL':"'".$this->db->idate($this->dateend)."'").',';
-		$sql .= ' '."'".$this->db->idate(dol_now())."'".',';
-		$sql .= ' '.(! isset($this->note_private)?'NULL':"'".$this->db->escape($this->note_private)."'").',';
-		$sql .= ' '.(! isset($this->note_public)?'NULL':"'".$this->db->escape($this->note_public)."'").',';
-		$sql .= ' '.(! isset($this->status)?'NULL':$this->status);
+		$sql .= ' '.(! isset($this->sufix)?'NULL':"'".$this->db->escape($this->sufix)."'").',';
+		$sql .= ' '.(! isset($this->label)?'NULL':"'".$this->db->escape($this->label)."'").',';
+		$sql .= ' '.(! isset($this->fk_academicyear)?'NULL':$this->fk_academicyear).',';
+		$sql .= ' '.(! isset($this->grado_code)?'NULL':"'".$this->db->escape($this->grado_code)."'").',';
+		$sql .= ' '.(! isset($this->date_create) || dol_strlen($this->date_create)==0?'NULL':"'".$this->db->idate($this->date_create)."'").',';
+		$sql .= ' '.(! isset($this->statut)?'NULL':$this->statut).',';
+		$sql .= ' '.(! isset($this->import_key)?'NULL':"'".$this->db->escape($this->import_key)."'");
 
 		
 		$sql .= ')';
@@ -190,19 +202,20 @@ class Educoacadyear extends CommonObject
 		$sql .= ' t.rowid,';
 		
 		$sql .= " t.ref,";
-		$sql .= " t.datestart,";
-		$sql .= " t.dateend,";
-		$sql .= " t.datec,";
+		$sql .= " t.sufix,";
+		$sql .= " t.label,";
+		$sql .= " t.fk_academicyear,";
+		$sql .= " t.grado_code,";
 		$sql .= " t.tms,";
-		$sql .= " t.note_private,";
-		$sql .= " t.note_public,";
-		$sql .= " t.status";
+		$sql .= " t.date_create,";
+		$sql .= " t.statut,";
+		$sql .= " t.import_key";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
 		$sql.= ' WHERE 1 = 1';
 		if (! empty($conf->multicompany->enabled)) {
-		    $sql .= " AND entity IN (" . getEntity("educoacadyear", 1) . ")";
+		    $sql .= " AND entity IN (" . getEntity("educogroup", 1) . ")";
 		}
 		if (null !== $ref) {
 			$sql .= ' AND t.ref = ' . '\'' . $ref . '\'';
@@ -219,13 +232,14 @@ class Educoacadyear extends CommonObject
 				$this->id = $obj->rowid;
 				
 				$this->ref = $obj->ref;
-				$this->datestart = $this->db->jdate($obj->datestart);
-				$this->dateend = $this->db->jdate($obj->dateend);
-				$this->datec = $this->db->jdate($obj->datec);
+				$this->sufix = $obj->sufix;
+				$this->label = $obj->label;
+				$this->fk_academicyear = $obj->fk_academicyear;
+				$this->grado_code = $obj->grado_code;
 				$this->tms = $this->db->jdate($obj->tms);
-				$this->note_private = $obj->note_private;
-				$this->note_public = $obj->note_public;
-				$this->status = $obj->status;
+				$this->date_create = $this->db->jdate($obj->date_create);
+				$this->statut = $obj->statut;
+				$this->import_key = $obj->import_key;
 
 				
 			}
@@ -274,13 +288,14 @@ class Educoacadyear extends CommonObject
 		$sql .= ' t.rowid,';
 		
 		$sql .= " t.ref,";
-		$sql .= " t.datestart,";
-		$sql .= " t.dateend,";
-		$sql .= " t.datec,";
+		$sql .= " t.sufix,";
+		$sql .= " t.label,";
+		$sql .= " t.fk_academicyear,";
+		$sql .= " t.grado_code,";
 		$sql .= " t.tms,";
-		$sql .= " t.note_private,";
-		$sql .= " t.note_public,";
-		$sql .= " t.status";
+		$sql .= " t.date_create,";
+		$sql .= " t.statut,";
+		$sql .= " t.import_key";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element. ' as t';
@@ -294,7 +309,7 @@ class Educoacadyear extends CommonObject
 		}
 		$sql.= ' WHERE 1 = 1';
 		if (! empty($conf->multicompany->enabled)) {
-		    $sql .= " AND entity IN (" . getEntity("educoacadyear", 1) . ")";
+		    $sql .= " AND entity IN (" . getEntity("educogroup", 1) . ")";
 		}
 		if (count($sqlwhere) > 0) {
 			$sql .= ' AND ' . implode(' '.$filtermode.' ', $sqlwhere);
@@ -313,18 +328,19 @@ class Educoacadyear extends CommonObject
 			$num = $this->db->num_rows($resql);
 
 			while ($obj = $this->db->fetch_object($resql)) {
-				$line = new EducoacadyearLine();
+				$line = new EducogroupLine();
 
 				$line->id = $obj->rowid;
 				
 				$line->ref = $obj->ref;
-				$line->datestart = $this->db->jdate($obj->datestart);
-				$line->dateend = $this->db->jdate($obj->dateend);
-				$line->datec = $this->db->jdate($obj->datec);
+				$line->sufix = $obj->sufix;
+				$line->label = $obj->label;
+				$line->fk_academicyear = $obj->fk_academicyear;
+				$line->grado_code = $obj->grado_code;
 				$line->tms = $this->db->jdate($obj->tms);
-				$line->note_private = $obj->note_private;
-				$line->note_public = $obj->note_public;
-				$line->status = $obj->status;
+				$line->date_create = $this->db->jdate($obj->date_create);
+				$line->statut = $obj->statut;
+				$line->import_key = $obj->import_key;
 
 				
 
@@ -360,14 +376,23 @@ class Educoacadyear extends CommonObject
 		if (isset($this->ref)) {
 			 $this->ref = trim($this->ref);
 		}
-		if (isset($this->note_private)) {
-			 $this->note_private = trim($this->note_private);
+		if (isset($this->sufix)) {
+			 $this->sufix = trim($this->sufix);
 		}
-		if (isset($this->note_public)) {
-			 $this->note_public = trim($this->note_public);
+		if (isset($this->label)) {
+			 $this->label = trim($this->label);
 		}
-		if (isset($this->status)) {
-			 $this->status = trim($this->status);
+		if (isset($this->fk_academicyear)) {
+			 $this->fk_academicyear = trim($this->fk_academicyear);
+		}
+		if (isset($this->grado_code)) {
+			 $this->grado_code = trim($this->grado_code);
+		}
+		if (isset($this->statut)) {
+			 $this->statut = trim($this->statut);
+		}
+		if (isset($this->import_key)) {
+			 $this->import_key = trim($this->import_key);
 		}
 
 		
@@ -379,13 +404,14 @@ class Educoacadyear extends CommonObject
 		$sql = 'UPDATE ' . MAIN_DB_PREFIX . $this->table_element . ' SET';
 		
 		$sql .= ' ref = '.(isset($this->ref)?"'".$this->db->escape($this->ref)."'":"null").',';
-		$sql .= ' datestart = '.(! isset($this->datestart) || dol_strlen($this->datestart) != 0 ? "'".$this->db->idate($this->datestart)."'" : 'null').',';
-		$sql .= ' dateend = '.(! isset($this->dateend) || dol_strlen($this->dateend) != 0 ? "'".$this->db->idate($this->dateend)."'" : 'null').',';
-		$sql .= ' datec = '.(! isset($this->datec) || dol_strlen($this->datec) != 0 ? "'".$this->db->idate($this->datec)."'" : 'null').',';
+		$sql .= ' sufix = '.(isset($this->sufix)?"'".$this->db->escape($this->sufix)."'":"null").',';
+		$sql .= ' label = '.(isset($this->label)?"'".$this->db->escape($this->label)."'":"null").',';
+		$sql .= ' fk_academicyear = '.(isset($this->fk_academicyear)?$this->fk_academicyear:"null").',';
+		$sql .= ' grado_code = '.(isset($this->grado_code)?"'".$this->db->escape($this->grado_code)."'":"null").',';
 		$sql .= ' tms = '.(dol_strlen($this->tms) != 0 ? "'".$this->db->idate($this->tms)."'" : "'".$this->db->idate(dol_now())."'").',';
-		$sql .= ' note_private = '.(isset($this->note_private)?"'".$this->db->escape($this->note_private)."'":"null").',';
-		$sql .= ' note_public = '.(isset($this->note_public)?"'".$this->db->escape($this->note_public)."'":"null").',';
-		$sql .= ' status = '.(isset($this->status)?$this->status:"null");
+		$sql .= ' date_create = '.(! isset($this->date_create) || dol_strlen($this->date_create) != 0 ? "'".$this->db->idate($this->date_create)."'" : 'null').',';
+		$sql .= ' statut = '.(isset($this->statut)?$this->statut:"null").',';
+		$sql .= ' import_key = '.(isset($this->import_key)?"'".$this->db->escape($this->import_key)."'":"null");
 
         
 		$sql .= ' WHERE rowid=' . $this->id;
@@ -488,7 +514,7 @@ class Educoacadyear extends CommonObject
 
 		global $user;
 		$error = 0;
-		$object = new Educoacadyear($this->db);
+		$object = new Educogroup($this->db);
 
 		$this->db->begin();
 
@@ -547,7 +573,7 @@ class Educoacadyear extends CommonObject
         $label.= '<br>';
         $label.= '<b>' . $langs->trans('Ref') . ':</b> ' . $this->ref;
 
-        $url = DOL_URL_ROOT.'/educo/academic/card.php?id='.$this->id;
+        $url = DOL_URL_ROOT.'/educo/'.$this->table_name.'_card.php?id='.$this->id;
         
         $linkclose='';
         if (empty($notooltip))
@@ -647,13 +673,14 @@ class Educoacadyear extends CommonObject
 		$this->id = 0;
 		
 		$this->ref = '';
-		$this->datestart = '';
-		$this->dateend = '';
-		$this->datec = '';
+		$this->sufix = '';
+		$this->label = '';
+		$this->fk_academicyear = '';
+		$this->grado_code = '';
 		$this->tms = '';
-		$this->note_private = '';
-		$this->note_public = '';
-		$this->status = '';
+		$this->date_create = '';
+		$this->statut = '';
+		$this->import_key = '';
 
 		
 	}
@@ -661,9 +688,9 @@ class Educoacadyear extends CommonObject
 }
 
 /**
- * Class EducoacadyearLine
+ * Class EducogroupLine
  */
-class EducoacadyearLine
+class EducogroupLine
 {
 	/**
 	 * @var int ID
@@ -674,13 +701,14 @@ class EducoacadyearLine
 	 */
 	
 	public $ref;
-	public $datestart = '';
-	public $dateend = '';
-	public $datec = '';
+	public $sufix;
+	public $label;
+	public $fk_academicyear;
+	public $grado_code;
 	public $tms = '';
-	public $note_private;
-	public $note_public;
-	public $status;
+	public $date_create = '';
+	public $statut;
+	public $import_key;
 
 	/**
 	 * @var mixed Sample line property 2
