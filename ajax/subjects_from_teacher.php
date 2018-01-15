@@ -1,6 +1,6 @@
 <?php
 
-/*
+/* 
  * Copyright (C) 2018 ander
  *
  * This program is free software: you can redistribute it and/or modify
@@ -35,6 +35,7 @@ dol_include_once('/educo/class/educopensum.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
 dol_include_once('/educo/class/educogroup.class.php');
 dol_include_once('/educo/class/html.formeduco.class.php');
+dol_include_once('/educo/class/event.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
 
 // Load traductions files requiredby by page
@@ -43,8 +44,19 @@ $langs->load("other");
 
 $academicid = GETPOST('academicid', 'int');
 $teacherid = GETPOST('teacherid', 'int');
-$groupid= GETPOST('groupid', 'int');
-$group=new Educogroup($db);
-$group->fetch($groupid);
-$subjects = fetchSubjectsPesum($academicid, $group->grado_code,$teacherid);
-print json_encode($subjects);
+if(!$teacherid)
+    print json_encode(array());
+$subjects = fetchSubjectsTeacher($academicid, $teacherid);
+$array = array();
+//var_dump($subjects);
+foreach ($subjects as $e) {  
+    $event = new Event($e);
+    $event->id=$e->rowid;
+    $event->title=$e->subject_label;
+    $event->setStart($e->datep);
+    $event->setEnd($e->datef);
+    //$event->SyncWeek();
+    $array[] = $event->toArray();
+}
+print json_encode($array);
+die;

@@ -132,7 +132,7 @@ if ($reshook < 0)
 if (empty($reshook)) {
     if ($cancel) {
         if ($action != 'addlink') {
-            $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/list.php', 1);
+            $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/student/list.php', 1);
             header("Location: " . $urltogo);
             exit;
         }
@@ -145,7 +145,7 @@ if (empty($reshook)) {
     // Action to add record
     if ($action == 'add') {
         if (GETPOST('cancel')) {
-            $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/list.php', 1);
+            $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/student/list.php', 1);
             header("Location: " . $urltogo);
             exit;
         }
@@ -214,29 +214,36 @@ if (empty($reshook)) {
         }
         if (!$error) {
 
-
-
             $result = $object->create($user);
 
             if ($result > 0) {
                 // Logo/Photo save
-                $dir = $conf->educo->multidir_output[$conf->entity] . "/" . $object->id . "/photos/";
+                $dir = $conf->educo->dir_output . '/' . get_exdir(0, 0, 0, 1, $object, 'educo') . '/photos';
                 $file_OK = is_uploaded_file($_FILES['photo']['tmp_name']);
+                //var_dump($file_OK);
                 if ($file_OK) {
-                    if (image_format_supported($_FILES['photo']['name'])) {
+                    if (GETPOST('deletephoto')) {
+                        require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+                        $fileimg = $conf->educo->dir_output . '/' . get_exdir(0, 0, 0, 1, $object, 'member') . '/photos/' . $object->photo;
+                        $dirthumbs = $conf->educo->dir_output . '/' . get_exdir(0, 0, 0, 1, $object, 'member') . '/photos/thumbs';
+                        dol_delete_file($fileimg);
+                        dol_delete_dir_recursive($dirthumbs);
+                    }
+
+                    if (image_format_supported($_FILES['photo']['name']) > 0) {
                         dol_mkdir($dir);
 
                         if (@is_dir($dir)) {
                             $newfile = $dir . '/' . dol_sanitizeFileName($_FILES['photo']['name']);
-                            $result = dol_move_uploaded_file($_FILES['photo']['tmp_name'], $newfile, 1);
-
-                            if (!$result > 0) {
-                                $errors[] = "ErrorFailedToSaveFile";
+                            if (!dol_move_uploaded_file($_FILES['photo']['tmp_name'], $newfile, 1, 0, $_FILES['photo']['error']) > 0) {
+                                setEventMessages($langs->trans("ErrorFailedToSaveFile"), null, 'errors');
                             } else {
                                 // Create thumbs
                                 $object->addThumbs($newfile);
                             }
                         }
+                    } else {
+                        setEventMessages("ErrorBadImageFormat", null, 'errors');
                     }
                 } else {
                     switch ($_FILES['photo']['error']) {
@@ -251,7 +258,7 @@ if (empty($reshook)) {
                 }
                 $db->commit();
                 // Creation OK
-                $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/list.php', 1);
+                $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/student/list.php', 1);
                 header("Location: " . $urltogo);
                 exit;
             } {
@@ -280,16 +287,21 @@ if (empty($reshook)) {
 
 
         $object->ref = GETPOST('ref', 'alpha');
-        $object->name = GETPOST('name', 'alpha');
+        $object->name = dolGetFirstLastname(GETPOST('firstname', 'alpha'), GETPOST('lastname', 'alpha'));
         $object->firstname = GETPOST('firstname', 'alpha');
         $object->lastname = GETPOST('lastname', 'alpha');
         $object->doc_type = GETPOST('doc_type', 'alpha');
         $object->document = GETPOST('document', 'alpha');
-        $object->entity = GETPOST('entity', 'int');
-        $object->fk_contact = GETPOST('fk_contact', 'int');
-        $object->fk_soc = GETPOST('fk_soc', 'int');
+        //$object->entity = GETPOST('entity', 'int');
+        //$object->fk_contact = GETPOST('fk_contact', 'int');
+        // $object->fk_soc = GETPOST('fk_soc', 'int');
         $object->status = GETPOST('status', 'int');
-        $object->import_key = GETPOST('import_key', 'alpha');
+        if (GETPOST('deletephoto'))
+            $object->photo = '';
+        elseif (!empty($_FILES['photo']['name']))
+            $object->photo = dol_sanitizeFileName($_FILES['photo']['name']);
+
+        // $object->import_key = GETPOST('import_key', 'alpha');
 
 
 
@@ -301,6 +313,58 @@ if (empty($reshook)) {
         if (!$error) {
             $result = $object->update($user);
             if ($result > 0) {
+
+                //$categories = GETPOST('memcats', 'array');
+                //$object->setCategories($categories);
+                // Logo/Photo save
+                $dir = $conf->educo->dir_output . '/' . get_exdir(0, 0, 0, 1, $object, 'educo') . '/photos';
+                $file_OK = is_uploaded_file($_FILES['photo']['tmp_name']);
+                //var_dump($file_OK);
+                if ($file_OK) {
+                    if (GETPOST('deletephoto')) {
+                        require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+                        $fileimg = $conf->educo->dir_output . '/' . get_exdir(0, 0, 0, 1, $object, 'member') . '/photos/' . $object->photo;
+                        $dirthumbs = $conf->educo->dir_output . '/' . get_exdir(0, 0, 0, 1, $object, 'member') . '/photos/thumbs';
+                        dol_delete_file($fileimg);
+                        dol_delete_dir_recursive($dirthumbs);
+                    }
+
+                    if (image_format_supported($_FILES['photo']['name']) > 0) {
+                        dol_mkdir($dir);
+
+                        if (@is_dir($dir)) {
+                            $newfile = $dir . '/' . dol_sanitizeFileName($_FILES['photo']['name']);
+                            if (!dol_move_uploaded_file($_FILES['photo']['tmp_name'], $newfile, 1, 0, $_FILES['photo']['error']) > 0) {
+                                setEventMessages($langs->trans("ErrorFailedToSaveFile"), null, 'errors');
+                            } else {
+                                // Create thumbs
+                                $object->addThumbs($newfile);
+                            }
+                        }
+                    } else {
+                        setEventMessages("ErrorBadImageFormat", null, 'errors');
+                    }
+                } else {
+                    switch ($_FILES['photo']['error']) {
+                        case 1: //uploaded file exceeds the upload_max_filesize directive in php.ini
+                        case 2: //uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the html form
+                            $errors[] = "ErrorFileSizeTooLarge";
+                            break;
+                        case 3: //uploaded file was only partially uploaded
+                            $errors[] = "ErrorFilePartiallyUploaded";
+                            break;
+                    }
+                }
+                //die;
+                $rowid = $object->id;
+                $id = $object->id;
+                $action = '';
+
+                if (!empty($backtopage)) {
+                    header("Location: " . $backtopage);
+                    exit;
+                }
+
                 $action = 'view';
             } else {
                 // Creation KO
@@ -322,7 +386,7 @@ if (empty($reshook)) {
         if ($result > 0) {
             // Delete OK
             setEventMessages("RecordDeleted", null, 'mesgs');
-            header("Location: " . dol_buildpath('/educo/list.php', 1));
+            header("Location: " . dol_buildpath('/educo/student/list.php', 1));
             exit;
         } else {
             if (!empty($object->errors))
@@ -366,15 +430,16 @@ jQuery(document).ready(function() {
 
 // Part to create
 if ($action == 'create') {
-    print load_fiche_titre($langs->trans("NewMyModule"));
+    print load_fiche_titre($langs->trans("NewStudent"));
 
-    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '" enctype="multipart/form-data">';
     print '<input type="hidden" name="action" value="add">';
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
 
     dol_fiche_head();
-
-    card_create($object, $contact, $soc);
+    include DOL_DOCUMENT_ROOT . '/educo/tpl/card_create.tpl.php';
+    include DOL_DOCUMENT_ROOT . '/educo/tpl/card_create_contact.tpl.php';
+    include DOL_DOCUMENT_ROOT . '/educo/tpl/card_create_third.tpl.php';
     dol_fiche_end();
 
     print '<div class="center"><input type="submit" class="button" name="add" value="' . $langs->trans("Create") . '"> &nbsp; <input type="submit" class="button" name="cancel" value="' . $langs->trans("Cancel") . '"></div>';
@@ -386,9 +451,9 @@ if ($action == 'create') {
 
 // Part to edit record
 if (($id || $ref) && $action == 'edit') {
-    print load_fiche_titre($langs->trans("MyModule"));
+    print load_fiche_titre($langs->trans("Student"));
 
-    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '"  enctype="multipart/form-data">';
     print '<input type="hidden" name="action" value="update">';
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
     print '<input type="hidden" name="id" value="' . $object->id . '">';
@@ -399,17 +464,34 @@ if (($id || $ref) && $action == 'edit') {
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
     // 
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldref") . '</td><td><input class="flat" type="text" name="ref" value="' . $object->ref . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldname") . '</td><td><input class="flat" type="text" name="name" value="' . $object->name . '"></td></tr>';
+    // print '<tr><td class="fieldrequired">' . $langs->trans("Fieldname") . '</td><td><input class="flat" type="text" name="name" value="' . $object->name . '"></td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfirstname") . '</td><td><input class="flat" type="text" name="firstname" value="' . $object->firstname . '"></td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldlastname") . '</td><td><input class="flat" type="text" name="lastname" value="' . $object->lastname . '"></td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fielddoc_type") . '</td><td><input class="flat" type="text" name="doc_type" value="' . $object->doc_type . '"></td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fielddocument") . '</td><td><input class="flat" type="text" name="document" value="' . $object->document . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td><input class="flat" type="text" name="entity" value="' . $object->entity . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_contact") . '</td><td><input class="flat" type="text" name="fk_contact" value="' . $object->fk_contact . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_soc") . '</td><td><input class="flat" type="text" name="fk_soc" value="' . $object->fk_soc . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td><input class="flat" type="text" name="status" value="' . $object->status . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldimport_key") . '</td><td><input class="flat" type="text" name="import_key" value="' . $object->import_key . '"></td></tr>';
-
+    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td><input class="flat" type="text" name="entity" value="' . $object->entity . '"></td></tr>';
+    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_contact") . '</td><td><input class="flat" type="text" name="fk_contact" value="' . $object->fk_contact . '"></td></tr>';
+    // print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_soc") . '</td><td><input class="flat" type="text" name="fk_soc" value="' . $object->fk_soc . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td>'
+            . $form->selectarray('status', array(1 => $langs->trans('Enabled'), 0 => $langs->trans('Disable')), $object->status)
+            . '</td></tr>';
+    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldimport_key") . '</td><td><input class="flat" type="text" name="import_key" value="' . $object->import_key . '"></td></tr>';
+    // Photo
+    print '<tr><td>' . $langs->trans("Photo") . '</td>';
+    print '<td class="hideonsmartphone" valign="middle">';
+    //$object->photo = 'photo.png';
+    print $form->showphoto('educo', $object) . "\n";
+    if ($user->rights->educo->write) {
+        if ($object->photo)
+            print "<br>\n";
+        print '<table class="nobordernopadding">';
+        if ($object->photo)
+            print '<tr><td><input type="checkbox" class="flat photodelete" name="deletephoto" id="photodelete"> ' . $langs->trans("Delete") . '<br><br></td></tr>';
+        print '<tr><td>' . $langs->trans("PhotoFile") . '</td></tr>';
+        print '<tr><td><input type="file" class="flat" name="photo" id="photoinput"></td></tr>';
+        print '</table>';
+    }
+    print '</td></tr>';
     print '</table>';
 
     dol_fiche_end();
@@ -430,29 +512,38 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     $contact->fetch($object->fk_contact);
 
 
-    print load_fiche_titre($langs->trans("MyModule"));
+    print load_fiche_titre($langs->trans("Student"));
 
     dol_fiche_head();
 
     if ($action == 'delete') {
-        $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteMyOjbect'), $langs->trans('ConfirmDeleteMyObject'), 'confirm_delete', '', 0, 1);
+        $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteStudent'), $langs->trans('ConfirmDeleteStudent'), 'confirm_delete', '', 0, 1);
         print $formconfirm;
     }
 
     print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td>'.$object->label.'</td></tr>';
-    // 
+    // Photo
+    print '<tr><td>' . $langs->trans("Photo") . '</td>';
+    print '<td class="hideonsmartphone" valign="middle">';
+    //$object->photo = 'photo.png';
+    print $form->showphoto('educo', $object) . "\n";
+
+    print '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldref") . '</td><td>' . $object->ref . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldname") . '</td><td>' . $object->name . '</td></tr>';
+    // print '<tr><td class="fieldrequired">' . $langs->trans("Fieldname") . '</td><td>' . $object->name . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfirstname") . '</td><td>' . $object->firstname . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldlastname") . '</td><td>' . $object->lastname . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddoc_type") . '</td><td>' . $object->doc_type . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddoc_type") . '</td>'
+            . '<td>' . $langs->trans($object->doc_type) . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fielddocument") . '</td><td>' . $object->document . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td>' . $object->entity . '</td></tr>';
+    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td>' . $object->entity . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_contact") . '</td><td>' . $soc->getNomUrl(1) . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_soc") . '</td><td>' . $contact->getNomUrl(1) . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td>' . $object->status . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldimport_key") . '</td><td>' . $object->import_key . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td>'
+            . '<td>' . $object->getLibStatut(2) . '</td></tr>';
+
+    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldimport_key") . '</td><td>' . $object->import_key . '</td></tr>';
 
     print '</table>';
 

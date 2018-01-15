@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright (C) 2007-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2014-2016 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2016      Jean-François Ferry	<jfefe@aternatik.fr>
@@ -52,6 +53,7 @@ require_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 dol_include_once('/educo/class/educogroup.class.php');
+dol_include_once('/educo/class/educocgrado.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
 dol_include_once('/educo/class/html.formeduco.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
@@ -74,8 +76,11 @@ $grado_label = GETPOST('grado_label', 'alpha');
 
 //academic
 $academic = new Educoacadyear($db);
+$grade = new Educocgrado($db);
 if ($academicid > 0 || !empty($ref))
     $ret = $academic->fetch($academicid, $ref);
+if (!empty($grado_code))
+    $ret = $grade->fetch('', $grado_code);
 $head = academicyear_header($academic);
 //diccioonarios
 $formeduco = new FormEduco($db);
@@ -141,16 +146,16 @@ if (empty($user->socid))
 
 // Definition of fields for list
 $arrayfields = array(
-    't.ref' => array('label' => $langs->trans("Fieldref"), 'checked' => 1),
-    't.sufix' => array('label' => $langs->trans("Fieldsufix"), 'checked' => 1),
+    //'t.ref' => array('label' => $langs->trans("Fieldref"), 'checked' => 1),
+    //'t.sufix' => array('label' => $langs->trans("Fieldsufix"), 'checked' => 1),
     't.label' => array('label' => $langs->trans("Fieldlabel"), 'checked' => 1),
-    //'t.fk_academicyear' => array('label' => $langs->trans("Fieldfk_academicyear"), 'checked' => 1),
-    't.grado_code' => array('label' => $langs->trans("Fieldgrado_code"), 'checked' => 1),
-    //'t.statut' => array('label' => $langs->trans("Fieldstatut"), 'checked' => 1),
-    //'t.import_key' => array('label' => $langs->trans("Fieldimport_key"), 'checked' => 1),
-    //'t.entity'=>array('label'=>$langs->trans("Entity"), 'checked'=>1, 'enabled'=>(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode))),
-    't.datec' => array('label' => $langs->trans("DateCreationShort"), 'checked' => 0, 'position' => 500),
-    't.tms' => array('label' => $langs->trans("DateModificationShort"), 'checked' => 0, 'position' => 500),
+        //'t.fk_academicyear' => array('label' => $langs->trans("Fieldfk_academicyear"), 'checked' => 1),
+        // 't.grado_code' => array('label' => $langs->trans("Fieldgrado_code"), 'checked' => 1),
+        //'t.statut' => array('label' => $langs->trans("Fieldstatut"), 'checked' => 1),
+        //'t.import_key' => array('label' => $langs->trans("Fieldimport_key"), 'checked' => 1),
+        //'t.entity'=>array('label'=>$langs->trans("Entity"), 'checked'=>1, 'enabled'=>(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode))),
+        // 't.datec' => array('label' => $langs->trans("DateCreationShort"), 'checked' => 0, 'position' => 500),
+        // 't.tms' => array('label' => $langs->trans("DateModificationShort"), 'checked' => 0, 'position' => 500),
         //'t.statut'=>array('label'=>$langs->trans("Status"), 'checked'=>1, 'position'=>1000),
 );
 // Extra fields
@@ -195,7 +200,6 @@ if (empty($reshook)) {
 
     // Purge search criteria
     if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter.x") || GETPOST("button_removefilter")) { // All tests are required to be compatible with all browsers
-
         $search_ref = '';
         $search_sufix = '';
         $search_label = '';
@@ -219,65 +223,7 @@ if (empty($reshook)) {
     $uploaddir = $conf->educo->dir_output;
     include DOL_DOCUMENT_ROOT . '/core/actions_massactions.inc.php';
     // Action to add record
-	if ($action == 'add')
-	{
-		if (GETPOST('cancel'))
-		{
-			$urltogo=$backtopage?$backtopage:dol_buildpath('/educo/list.php',1);
-			header("Location: ".$urltogo);
-			exit;
-		}
-
-		$error=0;
-
-		/* object_prop_getpost_prop */
-		
-	$object->ref=$academicid.'-'.GETPOST('grado_code','alpha').'-'.GETPOST('sufix','alpha');
-	$object->sufix=GETPOST('sufix','alpha');
-	$object->label=$grado_label.' '.GETPOST('sufix','alpha');
-	$object->fk_academicyear=$academicid;
-	$object->grado_code=GETPOST('grado_code','alpha');
-	$object->statut=1;
-        $object->date_create= dol_now();
-       	//$object->import_key=GETPOST('import_key','alpha');
-
-		
-
-		if (empty($object->grado_code))
-		{
-			$error++;
-			setEventMessages($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Fieldgrado_code")), null, 'errors');
-		}
-                if (empty($object->sufix))
-		{
-			$error++;
-			setEventMessages($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Fieldsufix")), null, 'errors');
-		}
-
-		if (! $error)
-		{
-			$result=$object->create($user);
-                       // var_dump($object->db->lastquery);
-			if ($result > 0)
-			{
-				// Creation OK
-				//$urltogo=$backtopage?$backtopage:dol_buildpath('/educo/list.php',1);
-				//header("Location: ".$urltogo);
-				//exit;
-                            setEventMessages($langs->trans('GroupAdded'));
-			}
-			{
-				// Creation KO
-				if (! empty($object->errors)) setEventMessages(null, $object->errors, 'errors');
-				else  setEventMessages($object->error, null, 'errors');
-				$action='create';
-			}
-		}
-		else
-		{
-			$action='create';
-		}
-	}
+    include DOL_DOCUMENT_ROOT . '/educo/tpl/actions_groups.inc.php';
 }
 
 
@@ -294,7 +240,7 @@ $form = new Form($db);
 
 //$help_url="EN:Module_Customers_Orders|FR:Module_Commandes_Clients|ES:Módulo_Pedidos_de_clientes";
 $help_url = '';
-$title = $langs->trans('MyModuleListTitle');
+$title = $langs->trans('GroupsListTitle');
 
 // Put here content of your page
 // Example : Adding jquery code
@@ -449,7 +395,7 @@ print '<input type="hidden" name="sortfield" value="' . $sortfield . '">';
 print '<input type="hidden" name="sortorder" value="' . $sortorder . '">';
 print '<input type="hidden" name="contextpage" value="' . $contextpage . '">';
 
-print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords, 'title_companies', 0, '', '', $limit);
+//print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords, 'title_companies', 0, '', '', $limit);
 
 if ($sall) {
     foreach ($fieldstosearchall as $key => $val)
@@ -480,7 +426,10 @@ $varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
 //tab academic
 
-dol_fiche_head($head, 'groups');
+//dol_fiche_head($head, 'groups');
+
+    dol_fiche_head($head, 'groups', $langs->trans("AcademicYearCard"), 0, 'generic');
+
 //baner
 print '<div class="arearef heightref valignmiddle" width="100%">';
 print '<table class="tagtable liste" >' . "\n";
@@ -488,42 +437,7 @@ print '<tr><td width="30%">' . $langs->trans("AcademicYear") . '</td><td width="
 $academic->next_prev_filter = "te.fournisseur = 1";
 print $form->showrefnav($academic, 'academicid', '', ($user->societe_id ? 0 : 1), 'rowid', 'ref', '', '');
 print '</td></tr></table>';
-
-// Part to create
-//if ($action == 'create')
-//{
-	print load_fiche_titre($langs->trans("NewMyModule"));
-
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="action" value="add">';
-	print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-        print '<input type="hidden" name="academicid" value="' . $academicid . '">';
-        print '<input type="hidden" name="grado_label" id="grado_label" value="' . $grado_lsbel. '">';
-
-	dol_fiche_head();
-
-	print '<table class="border centpercent">'."\n";
-	// print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
-	// 
-//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldref").'</td><td><input class="flat" type="text" name="ref" value="'.GETPOST('ref').'"></td></tr>';
-
-//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldlabel").'</td><td><input class="flat" type="text" name="label" value="'.GETPOST('label').'"></td></tr>';
-//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldfk_academicyear").'</td><td><input class="flat" type="text" name="fk_academicyear" value="'.GETPOST('fk_academicyear').'"></td></tr>';
-print '<tr><td class="fieldrequired">'.$langs->trans("Fieldgrado_code").'</td><td>';
-print    $formeduco->select_dictionary('grado_code', 'educo_c_grado', 'code', 'label', $grado_code,1).'</td></tr>';
-print '</td></tr>';
-print '<tr><td class="fieldrequired">'.$langs->trans("Fieldsufix").'</td><td><input class="flat" type="text" name="sufix" value="'.GETPOST('sufix').'"></td></tr>';
-//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldstatut").'</td><td><input class="flat" type="text" name="statut" value="'.GETPOST('statut').'"></td></tr>';
-//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldimport_key").'</td><td><input class="flat" type="text" name="import_key" value="'.GETPOST('import_key').'"></td></tr>';
-
-	print '</table>'."\n";
-
-	dol_fiche_end();
-
-	print '<div class="center"><input type="submit" class="button" name="add" value="'.$langs->trans("Create").'"> &nbsp; <input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></div>';
-
-	print '</form>';
-//}
+ include DOL_DOCUMENT_ROOT . '/educo/tpl/card_groups.inc.php';
 print '</div>';
 print '<div class="div-table-responsive">';
 print '<table class="tagtable liste' . ($moreforfilter ? " listwithfilterbefore" : "") . '">' . "\n";
@@ -709,6 +623,10 @@ while ($i < min($num, $limit)) {
             $selected = 0;
             if (in_array($obj->rowid, $arrayofselected))
                 $selected = 1;
+            print '<a name="' . $obj->rowid . '" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&action=confirm_delete&id=' . $obj->rowid . '">';
+            print img_delete();
+            print '</a>';
+
             print '<input id="cb' . $obj->rowid . '" class="flat checkforselect" type="checkbox" name="toselect[]" value="' . $obj->rowid . '"' . ($selected ? ' checked="checked"' : '') . '>';
         }
         print '</td>';

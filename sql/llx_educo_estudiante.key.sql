@@ -1,5 +1,27 @@
 
 --
+-- RELACIONES PARA LA TABLA `llx_educo_student`:
+--   `fk_contact`
+--       `llx_socpeople` -> `rowid`
+--   `fk_soc`
+--       `llx_societe` -> `rowid`
+--
+
+--
+-- Índices para tablas volcadas
+--
+
+--
+-- Indices de la tabla `llx_educo_student`
+--
+ALTER TABLE `llx_educo_student`
+  ADD PRIMARY KEY (`rowid`),
+  ADD UNIQUE KEY `document_UNIQUE` (`document`),
+  ADD UNIQUE KEY `ref_UNIQUE` (`ref`),
+  ADD KEY `fk_estudiante_llx_socpeople1_idx` (`fk_contact`),
+  ADD KEY `fk_llx_educo_estudiante_llx_societe1_idx` (`fk_soc`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 

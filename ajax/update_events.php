@@ -1,6 +1,6 @@
 <?php
 
-/*
+/* 
  * Copyright (C) 2018 ander
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 dol_include_once('/educo/class/educopensum.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
-dol_include_once('/educo/class/educogroup.class.php');
+dol_include_once('/educo/class/event.class.php');
 dol_include_once('/educo/class/html.formeduco.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
 
@@ -42,9 +42,8 @@ $langs->load("educo");
 $langs->load("other");
 
 $academicid = GETPOST('academicid', 'int');
+$groupid = GETPOST('groupid', 'int');
 $teacherid = GETPOST('teacherid', 'int');
-$groupid= GETPOST('groupid', 'int');
-$group=new Educogroup($db);
-$group->fetch($groupid);
-$subjects = fetchSubjectsPesum($academicid, $group->grado_code,$teacherid);
-print json_encode($subjects);
+$event= json_decode(GETPOST("event"));
+
+

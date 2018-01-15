@@ -18,10 +18,10 @@
  */
 
 /**
- *   	\file       educo/educoacadyear_card.php
+ *   	\file       educo/educogroupstudent_card.php
  * 		\ingroup    educo
  * 		\brief      This file is an example of a php page
- * 					Initialy built by build_class_from_table on 2017-12-28 13:49
+ * 					Initialy built by build_class_from_table on 2018-01-13 12:09
  */
 //if (! defined('NOREQUIREUSER'))  define('NOREQUIREUSER','1');
 //if (! defined('NOREQUIREDB'))    define('NOREQUIREDB','1');
@@ -49,27 +49,34 @@ if (!$res)
 // Change this following line to use the correct relative path from htdocs
 include_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
+dol_include_once('/educo/class/educogroupstudent.class.php');
+dol_include_once('/educo/class/educogroup.class.php');
+dol_include_once('/educo/class/educostudent.class.php');
+dol_include_once('/educo/class/html.formeduco.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
-dol_include_once('/core/class/doleditor.class.php');
 // Load traductions files requiredby by page
 $langs->load("educo");
 $langs->load("other");
 
 // Get parameters
 $id = GETPOST('id', 'int');
+$academicid = GETPOST('academicid', 'int');
+$studentid = GETPOST('studentid', 'int');
+$studentref = GETPOST('studentref', 'alpha');
+$groupid = GETPOST('groupid', 'int');
 $action = GETPOST('action', 'alpha');
 $cancel = GETPOST('cancel');
 $backtopage = GETPOST('backtopage');
 $myparam = GETPOST('myparam', 'alpha');
-//$datestart = GETPOST('datestart', 'alpha');
-//$dateend = GETPOST('dateend', 'alpha');
-$datestart = dol_mktime(0, 0, 0, GETPOST('datestartmonth'), GETPOST('datestartday'), GETPOST('datestartyear'));
-        $dateend = dol_mktime(0, 0, 0, GETPOST('dateendmonth'), GETPOST('dateendday'), GETPOST('dateendyear'));
-        
+
+
 $search_ref = GETPOST('search_ref', 'alpha');
-$search_note_private = GETPOST('search_note_private', 'alpha');
-$search_note_public = GETPOST('search_note_public', 'alpha');
-$search_status = GETPOST('search_status', 'int');
+$search_statut = GETPOST('search_statut', 'int');
+$search_fk_grupo = GETPOST('search_fk_grupo', 'int');
+$search_fk_estudiante = GETPOST('search_fk_estudiante', 'int');
+$search_fk_user = GETPOST('search_fk_user', 'int');
+$search_fk_academicyear = GETPOST('search_fk_academicyear', 'int');
+$search_entity = GETPOST('search_entity', 'int');
 
 
 
@@ -82,8 +89,11 @@ if ($user->societe_id > 0) {
 }
 //$result = restrictedArea($user, 'educo', $id);
 
-
-$object = new Educoacadyear($db);
+$academic = new Educoacadyear($db);
+$object = new Educogroupstudent($db);
+$group = new Educogroup($db);
+$student = new Educostudent($db);
+$enrollman = new User($db);
 $extrafields = new ExtraFields($db);
 
 // fetch optionals attributes and labels
@@ -92,7 +102,7 @@ $extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
 // Load object
 include DOL_DOCUMENT_ROOT . '/core/actions_fetchobject.inc.php';  // Must be include, not include_once  // Must be include, not include_once. Include fetch and fetch_thirdparty but not fetch_optionals
 // Initialize technical object to manage hooks of modules. Note that conf->hooks_modules contains array array
-$hookmanager->initHooks(array('educoacadyear'));
+$hookmanager->initHooks(array('educogroupstudent'));
 
 
 
@@ -110,19 +120,25 @@ if ($reshook < 0)
 if (empty($reshook)) {
     if ($cancel) {
         if ($action != 'addlink') {
-            $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/academic/list.php', 1);
+            $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/enrollment/list.php', 1);
             header("Location: " . $urltogo);
             exit;
         }
+
         if ($id > 0 || !empty($ref))
             $ret = $object->fetch($id, $ref);
+      
+
         $action = '';
     }
-
+    if ($academicid > 0)
+        $ret = $academic->fetch($academicid);
+    if ($groupid > 0)
+        $ret = $group->fetch($groupid);
     // Action to add record
     if ($action == 'add') {
         if (GETPOST('cancel')) {
-            $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/academic/list.php', 1);
+            $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/enrollment/list.php', 1);
             header("Location: " . $urltogo);
             exit;
         }
@@ -131,15 +147,14 @@ if (empty($reshook)) {
 
         /* object_prop_getpost_prop */
 
-        $object->ref = explode('/', GETPOST('datestart', 'alpha'))[2];
-        $object->datestart = dol_mktime(0, 0, 0, GETPOST('datestartmonth'), GETPOST('datestartday'), GETPOST('datestartyear'));
-        $object->dateend = dol_mktime(0, 0, 0, GETPOST('dateendmonth'), GETPOST('dateendday'), GETPOST('dateendyear'));
-        $object->note_private = GETPOST('note_private', 'alpha');
-        $object->note_public = GETPOST('note_public', 'alpha');
-        $object->status = 0;
+        $object->ref = $academic->ref . '-' . $group->grado_code . '-' . $studentref;
+        $object->statut = 1;
+        $object->fk_grupo = $groupid;
+        $object->fk_estudiante = $studentid;
+        $object->fk_user = $user->id;
+        $object->fk_academicyear = $academicid;
+        $object->entity = $conf->entity;
         $object->datec = dol_now();
-        $object->tms = dol_now();
-
 
 
         if (empty($object->ref)) {
@@ -149,9 +164,10 @@ if (empty($reshook)) {
 
         if (!$error) {
             $result = $object->create($user);
+            print $object->db->lastquery;
             if ($result > 0) {
                 // Creation OK
-                $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/academic/list.php', 1);
+                $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/enrollment/list.php', 1);
                 header("Location: " . $urltogo);
                 exit;
             } {
@@ -173,12 +189,14 @@ if (empty($reshook)) {
         $error = 0;
 
 
-        $object->datestart = dol_mktime(0, 0, 0, GETPOST('datestartmonth'), GETPOST('datestartday'), GETPOST('datestartyear'));
-        $object->dateend = dol_mktime(0, 0, 0, GETPOST('dateendmonth'), GETPOST('dateendday'), GETPOST('dateendyear'));
+        $object->ref = GETPOST('ref', 'alpha');
+        $object->statut = GETPOST('statut', 'int');
+        $object->fk_grupo = GETPOST('fk_grupo', 'int');
+        $object->fk_estudiante = GETPOST('fk_estudiante', 'int');
+        $object->fk_user = GETPOST('fk_user', 'int');
+        $object->fk_academicyear = GETPOST('fk_academicyear', 'int');
+        $object->entity = GETPOST('entity', 'int');
 
-        $object->note_private = GETPOST('note_private', 'alpha');
-        $object->note_public = GETPOST('note_public', 'alpha');
-        $object->status = GETPOST('status', 'int');
 
 
 
@@ -211,7 +229,7 @@ if (empty($reshook)) {
         if ($result > 0) {
             // Delete OK
             setEventMessages("RecordDeleted", null, 'mesgs');
-            header("Location: " . dol_buildpath('/educo/academic/list.php', 1));
+            header("Location: " . dol_buildpath('/educo/enrollment/list.php', 1));
             exit;
         } else {
             if (!empty($object->errors))
@@ -230,11 +248,11 @@ if (empty($reshook)) {
  *
  * Put here all code to build page
  * ************************************************** */
-
-llxHeader('', 'MyPageName', '');
+$js = array('/educo/js/enrollment.js');
+llxHeader('', 'MyPageName', '', '', '', '', $js);
 
 $form = new Form($db);
-$head = academicyear_header($object);
+$formEduco = new FormEduco($db);
 
 // Put here content of your page
 // Example : Adding jquery code
@@ -255,9 +273,9 @@ jQuery(document).ready(function() {
 
 // Part to create
 if ($action == 'create') {
-    print load_fiche_titre($langs->trans("NewAcademicYear"));
+    print load_fiche_titre($langs->trans("NewEnrollment"));
 
-    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+    print '<form id="formcreate" method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
     print '<input type="hidden" name="action" value="add">';
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
 
@@ -266,21 +284,20 @@ if ($action == 'create') {
     print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
     // 
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddatestart") . '</td>'
-            . '<td>';
-    print $form->select_date($object->datestart, 'datestart') . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddatestart") . '</td>'
-            . '<td>';
-    print $form->select_date($object->dateend, 'dateend') . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_private") . '</td><td>';
-    $doleditor = new DolEditor("note_private", $object->note_private, '', 160, 'dolibarr_notes', '', false, true, 1, 3, 80);
-    $doleditor->Create();
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_academicyear") . '</td>';
+    print '<td>';
+    print $formEduco->select_academic('academicid', $academicid, 1);
     print '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_public") . '</td><td>';
-    $doleditor = new DolEditor("note_public", $object->note_public, '', 160, 'dolibarr_notes', '', false, true, 1, 3, 80);
-    $doleditor->Create();
+//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldref").'</td><td><input class="flat" type="text" name="ref" value="'.GETPOST('ref').'"></td></tr>';
+//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldstatut").'</td><td><input class="flat" type="text" name="statut" value="'.GETPOST('statut').'"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_grupo") . '</td><td>';
+    print $formEduco->select_groups('groupid', $academicid, $groupid, 1);
     print '</td></tr>';
-
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_estudiante") . '</td><td>';
+    print $formEduco->select_student('student', $studentid, $studentref, DOL_URL_ROOT . '/educo/ajax/student.php');
+    print '</td></tr>';
+    //   print '<tr><td class="fieldrequired">' . $langs->trans("Fieldcordinator") . '</td><td><input class="flat" type="text" name="fk_user" value="' . GETPOST('fk_user') . '"></td></tr>';
+//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldentity").'</td><td><input class="flat" type="text" name="entity" value="'.GETPOST('entity').'"></td></tr>';
 
     print '</table>' . "\n";
 
@@ -295,34 +312,25 @@ if ($action == 'create') {
 
 // Part to edit record
 if (($id || $ref) && $action == 'edit') {
-    //print load_fiche_titre($langs->trans("AcademicYear"));
+    print load_fiche_titre($langs->trans("Enrollment"));
 
     print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
     print '<input type="hidden" name="action" value="update">';
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
     print '<input type="hidden" name="id" value="' . $object->id . '">';
 
-    dol_fiche_head($head, 'card', $langs->trans("AcademicYear"), 0, 'generic');
+    dol_fiche_head();
 
     print '<table class="border centpercent">' . "\n";
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddatestart") . '</td>'
-            . '<td>';
-    print $form->select_date($object->datestart, 'datestart') . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddatestart") . '</td>'
-            . '<td>';
-    print $form->select_date($object->dateend, 'dateend') . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_private") . '</td><td>';
-    $doleditor = new DolEditor("note_private", $object->note_private, '', 160, 'dolibarr_notes', '', false, true, 1, 3, 80);
-    $doleditor->Create();
-    print '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_public") . '</td><td>';
-    $doleditor = new DolEditor("note_public", $object->note_public, '', 160, 'dolibarr_notes', '', false, true, 1, 3, 80);
-    $doleditor->Create();
-    print '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td>';
-    print $form->selectarray('status', array(1 => $langs->trans('Active'), 0 => $langs->trans('Inactive')), $object->status);
-
-    print '</td></tr>';
+    // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
+    // 
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldref") . '</td><td><input class="flat" type="text" name="ref" value="' . $object->ref . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatut") . '</td><td><input class="flat" type="text" name="statut" value="' . $object->statut . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_grupo") . '</td><td><input class="flat" type="text" name="fk_grupo" value="' . $object->fk_grupo . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_estudiante") . '</td><td><input class="flat" type="text" name="fk_estudiante" value="' . $object->fk_estudiante . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_user") . '</td><td><input class="flat" type="text" name="fk_user" value="' . $object->fk_user . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_academicyear") . '</td><td><input class="flat" type="text" name="fk_academicyear" value="' . $object->fk_academicyear . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td><input class="flat" type="text" name="entity" value="' . $object->entity . '"></td></tr>';
 
     print '</table>';
 
@@ -341,28 +349,31 @@ if (($id || $ref) && $action == 'edit') {
 if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
     $res = $object->fetch_optionals($object->id, $extralabels);
 
+  if ($ret > 0)
+            $ret = $student->fetch($object->fk_estudiante);
+        if ($ret > 0)
+            $ret = $group->fetch($object->fk_grupo);
+        if ($ret > 0)
+            $ret = $enrollman->fetch($object->fk_user);
+    print load_fiche_titre($langs->trans("Enrollment"));
 
-    //print load_fiche_titre($langs->trans("AcademicYear"));
-
-    dol_fiche_head($head, 'card', $langs->trans("AcademicYearCard"), 0, 'generic');
+    dol_fiche_head();
 
     if ($action == 'delete') {
-        $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteAcademicYear'), $langs->trans('ConfirmDeleteAcademicYear'), 'confirm_delete', '', 0, 1);
+        $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteEnrollment'), $langs->trans('ConfirmDeleteEnrollment'), 'confirm_delete', '', 0, 1);
         print $formconfirm;
     }
 
-    print '<table class="border centpercent border tableforfield">' . "\n";
+    print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td>'.$object->label.'</td></tr>';
     // 
-    print '<tr><td class="fieldrequired" class="nowrap">' . $langs->trans("Fieldref") . '</td><td>' . $object->ref . '</td></tr>';
-     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_datestart") . '</td>'
-             . '<td>' .dol_print_date($object->datestart) . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_dateend") . '</td>'
-            . '<td>' .dol_print_date($object->dateend ). '</td></tr>';
-    
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_private") . '</td><td>' . $object->note_private . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_public") . '</td><td>' . $object->note_public . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td>' . $object->getLibStatut(2) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldref") . '</td><td>' . $object->ref . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatut") . '</td><td>' . $object->statut . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_grupo") . '</td><td>' . $group->getNomUrl(1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_estudiante") . '</td><td>' . $student->getNomUrl(1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_user") . '</td><td>' . $enrollman->getNomUrl(1) . '</td></tr>';
+//    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_academicyear") . '</td><td>' . $academicid->getNomUrl(1) . '</td></tr>';
+  //  print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td>' . $object->entity . '</td></tr>';
 
     print '</table>';
 
@@ -390,9 +401,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
     // Example 2 : Adding links to objects
     // Show links to link elements
-    //$linktoelem = $form->showLinkToObjectBlock($object, null, array('educoacadyear'));
+    //$linktoelem = $form->showLinkToObjectBlock($object, null, array('educogroupstudent'));
     //$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 }
+
+
 // End of page
 llxFooter();
 $db->close();

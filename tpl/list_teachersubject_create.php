@@ -17,7 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-dol_fiche_head($head, 'teacherssubjects');
+
+    dol_fiche_head($head, 'teacherssubjects', $langs->trans("AcademicYearCard"), 0, 'generic');
+
 //baner
 print '<div class="arearef heightref valignmiddle" width="100%">';
 print '<table class="tagtable liste" >' . "\n";
@@ -25,10 +27,29 @@ print '<tr><td width="30%">' . $langs->trans("AcademicYear") . '</td><td width="
 $academic->next_prev_filter = "te.fournisseur = 1";
 print $form->showrefnav($academic, 'academicid', '', ($user->societe_id ? 0 : 1), 'rowid', 'ref', '', '');
 print '</td></tr></table>';
+// Buttons
+if ($action != 'create') {
+    print '<div class="tabsAction">' . "\n";
+    $parameters = array();
+    $reshook = $hookmanager->executeHooks('addMoreActionsButtons', $parameters, $object, $action);    // Note that $action and $object may have been modified by hook
+    if ($reshook < 0)
+        setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+
+    if (empty($reshook)) {
+        if ($user->rights->educo->write) {
+            print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&amp;action=create">' . $langs->trans("Nuevo") . '</a></div>' . "\n";
+        }
+
+//    if ($user->rights->educo->delete) {
+//        print '<div class="inline-block divButAction"><a class="butActionDelete" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=delete">' . $langs->trans('Delete') . '</a></div>' . "\n";
+//    }
+    }
+    print '</div>' . "\n";
+}
 // Part to create
-//if ($action == 'create')
-//{
-print load_fiche_titre($langs->trans("NewMyModule"));
+if ($action == 'create')
+{
+print load_fiche_titre($langs->trans("NewTeacherSubject"));
 print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
 print '<input type="hidden" name="action" value="add">';
 print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
@@ -53,6 +74,6 @@ print '</table>' . "\n";
 dol_fiche_end();
 print '<div class="center"><input type="submit" class="button" name="add" value="' . $langs->trans("Create") . '"> &nbsp; <input type="submit" class="button" name="cancel" value="' . $langs->trans("Cancel") . '"></div>';
 print '</form>';
-//}
+}
 print '</div>';
 print dol_fiche_end();

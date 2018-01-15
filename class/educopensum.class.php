@@ -140,7 +140,7 @@ class Educopensum extends CommonObject
 		
 		$sql .= ') VALUES (';
 		
-		$sql .= ' '.(! isset($this->rowid)?'NULL':$this->rowid).',';
+		$sql .= ' '.(! isset($this->id)?'NULL':$this->id).',';
 		$sql .= ' '.(! isset($this->ref)?'NULL':"'".$this->db->escape($this->ref)."'").',';
 		$sql .= ' '.(! isset($this->fk_academicyear)?'NULL':$this->fk_academicyear).',';
 		$sql .= ' '.(! isset($this->horas)?'NULL':$this->horas).',';
@@ -154,7 +154,7 @@ class Educopensum extends CommonObject
 		$sql .= ')';
 
 		$this->db->begin();
-                var_dump($sql);
+               // var_dump($sql);
 		$resql = $this->db->query($sql);
 		if (!$resql) {
 			$error ++;
@@ -405,7 +405,7 @@ class Educopensum extends CommonObject
 		// Update request
 		$sql = 'UPDATE ' . MAIN_DB_PREFIX . $this->table_element . ' SET';
 		
-		$sql .= ' rowid = '.(isset($this->rowid)?$this->rowid:"null").',';
+		$sql .= ' rowid = '.(isset($this->id)?$this->id:"null").',';
 		$sql .= ' ref = '.(isset($this->ref)?"'".$this->db->escape($this->ref)."'":"null").',';
 		$sql .= ' fk_academicyear = '.(isset($this->fk_academicyear)?$this->fk_academicyear:"null").',';
 		$sql .= ' horas = '.(isset($this->horas)?$this->horas:"null").',';

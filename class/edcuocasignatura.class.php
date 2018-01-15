@@ -20,7 +20,7 @@
  */
 
 /**
- * \file    educo/educogroup.class.php
+ * \file    educo/edcuocasignatura.class.php
  * \ingroup educo
  * \brief   This file is an example for a CRUD class file (Create/Read/Update/Delete)
  *          Put some comments here
@@ -32,40 +32,36 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/commonobject.class.php';
 //require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
 
 /**
- * Class Educogroup
+ * Class Edcuocasignatura
  *
  * Put here description of your class
  *
  * @see CommonObject
  */
-class Educogroup extends CommonObject
+class Edcuocasignatura extends CommonObject
 {
 	/**
 	 * @var string Id to identify managed objects
 	 */
-	public $element = 'educogroup';
+	public $element = 'edcuocasignatura';
 	/**
 	 * @var string Name of table without prefix where object is stored
 	 */
-	public $table_element = 'educo_group';
+	public $table_element = 'edcuo_c_asignatura';
 
 	/**
-	 * @var EducogroupLine[] Lines
+	 * @var EdcuocasignaturaLine[] Lines
 	 */
 	public $lines = array();
 
 	/**
 	 */
 	
-	public $ref;
-	public $sufix;
+	public $code;
 	public $label;
-	public $fk_academicyear;
-	public $grado_code;
-	public $tms = '';
-	public $date_create = '';
-	public $statut;
-	public $import_key;
+	public $active;
+	public $note;
+	public $fk_area;
 
 	/**
 	 */
@@ -97,26 +93,20 @@ class Educogroup extends CommonObject
 
 		// Clean parameters
 		
-		if (isset($this->ref)) {
-			 $this->ref = trim($this->ref);
-		}
-		if (isset($this->sufix)) {
-			 $this->sufix = trim($this->sufix);
+		if (isset($this->code)) {
+			 $this->code = trim($this->code);
 		}
 		if (isset($this->label)) {
 			 $this->label = trim($this->label);
 		}
-		if (isset($this->fk_academicyear)) {
-			 $this->fk_academicyear = trim($this->fk_academicyear);
+		if (isset($this->active)) {
+			 $this->active = trim($this->active);
 		}
-		if (isset($this->grado_code)) {
-			 $this->grado_code = trim($this->grado_code);
+		if (isset($this->note)) {
+			 $this->note = trim($this->note);
 		}
-		if (isset($this->statut)) {
-			 $this->statut = trim($this->statut);
-		}
-		if (isset($this->import_key)) {
-			 $this->import_key = trim($this->import_key);
+		if (isset($this->fk_area)) {
+			 $this->fk_area = trim($this->fk_area);
 		}
 
 		
@@ -127,26 +117,20 @@ class Educogroup extends CommonObject
 		// Insert request
 		$sql = 'INSERT INTO ' . MAIN_DB_PREFIX . $this->table_element . '(';
 		
-		$sql.= 'ref,';
-		$sql.= 'sufix,';
+		$sql.= 'code,';
 		$sql.= 'label,';
-		$sql.= 'fk_academicyear,';
-		$sql.= 'grado_code,';
-		$sql.= 'date_create,';
-		$sql.= 'statut,';
-		$sql.= 'import_key';
+		$sql.= 'active,';
+		$sql.= 'note,';
+		$sql.= 'fk_area';
 
 		
 		$sql .= ') VALUES (';
 		
-		$sql .= ' '.(! isset($this->ref)?'NULL':"'".$this->db->escape($this->ref)."'").',';
-		$sql .= ' '.(! isset($this->sufix)?'NULL':"'".$this->db->escape($this->sufix)."'").',';
+		$sql .= ' '.(! isset($this->code)?'NULL':"'".$this->db->escape($this->code)."'").',';
 		$sql .= ' '.(! isset($this->label)?'NULL':"'".$this->db->escape($this->label)."'").',';
-		$sql .= ' '.(! isset($this->fk_academicyear)?'NULL':$this->fk_academicyear).',';
-		$sql .= ' '.(! isset($this->grado_code)?'NULL':"'".$this->db->escape($this->grado_code)."'").',';
-		$sql .= ' '.(! isset($this->date_create) || dol_strlen($this->date_create)==0?'NULL':"'".$this->db->idate($this->date_create)."'").',';
-		$sql .= ' '.(! isset($this->statut)?'NULL':$this->statut).',';
-		$sql .= ' '.(! isset($this->import_key)?'NULL':"'".$this->db->escape($this->import_key)."'");
+		$sql .= ' '.(! isset($this->active)?'NULL':$this->active).',';
+		$sql .= ' '.(! isset($this->note)?'NULL':"'".$this->db->escape($this->note)."'").',';
+		$sql .= ' '.(! isset($this->fk_area)?'NULL':"'".$this->db->escape($this->fk_area)."'");
 
 		
 		$sql .= ')';
@@ -201,21 +185,17 @@ class Educogroup extends CommonObject
 		$sql = 'SELECT';
 		$sql .= ' t.rowid,';
 		
-		$sql .= " t.ref,";
-		$sql .= " t.sufix,";
+		$sql .= " t.code,";
 		$sql .= " t.label,";
-		$sql .= " t.fk_academicyear,";
-		$sql .= " t.grado_code,";
-		$sql .= " t.tms,";
-		$sql .= " t.date_create,";
-		$sql .= " t.statut,";
-		$sql .= " t.import_key";
+		$sql .= " t.active,";
+		$sql .= " t.note,";
+		$sql .= " t.fk_area";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
 		$sql.= ' WHERE 1 = 1';
 		if (! empty($conf->multicompany->enabled)) {
-		    $sql .= " AND entity IN (" . getEntity("educogroup", 1) . ")";
+		    $sql .= " AND entity IN (" . getEntity("edcuocasignatura", 1) . ")";
 		}
 		if (null !== $ref) {
 			$sql .= ' AND t.ref = ' . '\'' . $ref . '\'';
@@ -231,15 +211,11 @@ class Educogroup extends CommonObject
 
 				$this->id = $obj->rowid;
 				
-				$this->ref = $obj->ref;
-				$this->sufix = $obj->sufix;
+				$this->code = $obj->code;
 				$this->label = $obj->label;
-				$this->fk_academicyear = $obj->fk_academicyear;
-				$this->grado_code = $obj->grado_code;
-				$this->tms = $this->db->jdate($obj->tms);
-				$this->date_create = $this->db->jdate($obj->date_create);
-				$this->statut = $obj->statut;
-				$this->import_key = $obj->import_key;
+				$this->active = $obj->active;
+				$this->note = $obj->note;
+				$this->fk_area = $obj->fk_area;
 
 				
 			}
@@ -287,15 +263,11 @@ class Educogroup extends CommonObject
 		$sql = 'SELECT';
 		$sql .= ' t.rowid,';
 		
-		$sql .= " t.ref,";
-		$sql .= " t.sufix,";
+		$sql .= " t.code,";
 		$sql .= " t.label,";
-		$sql .= " t.fk_academicyear,";
-		$sql .= " t.grado_code,";
-		$sql .= " t.tms,";
-		$sql .= " t.date_create,";
-		$sql .= " t.statut,";
-		$sql .= " t.import_key";
+		$sql .= " t.active,";
+		$sql .= " t.note,";
+		$sql .= " t.fk_area";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element. ' as t';
@@ -309,7 +281,7 @@ class Educogroup extends CommonObject
 		}
 		$sql.= ' WHERE 1 = 1';
 		if (! empty($conf->multicompany->enabled)) {
-		    $sql .= " AND entity IN (" . getEntity("educogroup", 1) . ")";
+		    $sql .= " AND entity IN (" . getEntity("edcuocasignatura", 1) . ")";
 		}
 		if (count($sqlwhere) > 0) {
 			$sql .= ' AND ' . implode(' '.$filtermode.' ', $sqlwhere);
@@ -328,19 +300,15 @@ class Educogroup extends CommonObject
 			$num = $this->db->num_rows($resql);
 
 			while ($obj = $this->db->fetch_object($resql)) {
-				$line = new EducogroupLine();
+				$line = new EdcuocasignaturaLine();
 
 				$line->id = $obj->rowid;
 				
-				$line->ref = $obj->ref;
-				$line->sufix = $obj->sufix;
+				$line->code = $obj->code;
 				$line->label = $obj->label;
-				$line->fk_academicyear = $obj->fk_academicyear;
-				$line->grado_code = $obj->grado_code;
-				$line->tms = $this->db->jdate($obj->tms);
-				$line->date_create = $this->db->jdate($obj->date_create);
-				$line->statut = $obj->statut;
-				$line->import_key = $obj->import_key;
+				$line->active = $obj->active;
+				$line->note = $obj->note;
+				$line->fk_area = $obj->fk_area;
 
 				
 
@@ -373,26 +341,20 @@ class Educogroup extends CommonObject
 
 		// Clean parameters
 		
-		if (isset($this->ref)) {
-			 $this->ref = trim($this->ref);
-		}
-		if (isset($this->sufix)) {
-			 $this->sufix = trim($this->sufix);
+		if (isset($this->code)) {
+			 $this->code = trim($this->code);
 		}
 		if (isset($this->label)) {
 			 $this->label = trim($this->label);
 		}
-		if (isset($this->fk_academicyear)) {
-			 $this->fk_academicyear = trim($this->fk_academicyear);
+		if (isset($this->active)) {
+			 $this->active = trim($this->active);
 		}
-		if (isset($this->grado_code)) {
-			 $this->grado_code = trim($this->grado_code);
+		if (isset($this->note)) {
+			 $this->note = trim($this->note);
 		}
-		if (isset($this->statut)) {
-			 $this->statut = trim($this->statut);
-		}
-		if (isset($this->import_key)) {
-			 $this->import_key = trim($this->import_key);
+		if (isset($this->fk_area)) {
+			 $this->fk_area = trim($this->fk_area);
 		}
 
 		
@@ -403,15 +365,11 @@ class Educogroup extends CommonObject
 		// Update request
 		$sql = 'UPDATE ' . MAIN_DB_PREFIX . $this->table_element . ' SET';
 		
-		$sql .= ' ref = '.(isset($this->ref)?"'".$this->db->escape($this->ref)."'":"null").',';
-		$sql .= ' sufix = '.(isset($this->sufix)?"'".$this->db->escape($this->sufix)."'":"null").',';
+		$sql .= ' code = '.(isset($this->code)?"'".$this->db->escape($this->code)."'":"null").',';
 		$sql .= ' label = '.(isset($this->label)?"'".$this->db->escape($this->label)."'":"null").',';
-		$sql .= ' fk_academicyear = '.(isset($this->fk_academicyear)?$this->fk_academicyear:"null").',';
-		$sql .= ' grado_code = '.(isset($this->grado_code)?"'".$this->db->escape($this->grado_code)."'":"null").',';
-		$sql .= ' tms = '.(dol_strlen($this->tms) != 0 ? "'".$this->db->idate($this->tms)."'" : "'".$this->db->idate(dol_now())."'").',';
-		$sql .= ' date_create = '.(! isset($this->date_create) || dol_strlen($this->date_create) != 0 ? "'".$this->db->idate($this->date_create)."'" : 'null').',';
-		$sql .= ' statut = '.(isset($this->statut)?$this->statut:"null").',';
-		$sql .= ' import_key = '.(isset($this->import_key)?"'".$this->db->escape($this->import_key)."'":"null");
+		$sql .= ' active = '.(isset($this->active)?$this->active:"null").',';
+		$sql .= ' note = '.(isset($this->note)?"'".$this->db->escape($this->note)."'":"null").',';
+		$sql .= ' fk_area = '.(isset($this->fk_area)?"'".$this->db->escape($this->fk_area)."'":"null");
 
         
 		$sql .= ' WHERE rowid=' . $this->id;
@@ -514,7 +472,7 @@ class Educogroup extends CommonObject
 
 		global $user;
 		$error = 0;
-		$object = new Educogroup($this->db);
+		$object = new Edcuocasignatura($this->db);
 
 		$this->db->begin();
 
@@ -569,13 +527,11 @@ class Educogroup extends CommonObject
         $result = '';
         $companylink = '';
 
-        $label = '<u>' . $langs->trans("Group") . '</u>';
+        $label = '<u>' . $langs->trans("MyModule") . '</u>';
         $label.= '<br>';
         $label.= '<b>' . $langs->trans('Ref') . ':</b> ' . $this->ref;
-        $label.= '<br>';
-        $label.= '<b>' . $langs->trans('Name') . ':</b> ' . $this->label;
 
-        $url = DOL_URL_ROOT.'/educo/academic/groups.php?academicid='.$this->fk_academicyear.'&id='.$this->id;
+        $url = DOL_URL_ROOT.'/educo/'.$this->table_name.'_card.php?id='.$this->id;
         
         $linkclose='';
         if (empty($notooltip))
@@ -599,7 +555,7 @@ class Educogroup extends CommonObject
             $result.=($linkstart.img_object(($notooltip?'':$label), 'label', ($notooltip?'':'class="classfortooltip"')).$linkend);
             if ($withpicto != 2) $result.=' ';
 		}
-		$result.= $linkstart . $this->label . $linkend;
+		$result.= $linkstart . $this->ref . $linkend;
 		return $result;
 	}
 
@@ -674,15 +630,11 @@ class Educogroup extends CommonObject
 	{
 		$this->id = 0;
 		
-		$this->ref = '';
-		$this->sufix = '';
+		$this->code = '';
 		$this->label = '';
-		$this->fk_academicyear = '';
-		$this->grado_code = '';
-		$this->tms = '';
-		$this->date_create = '';
-		$this->statut = '';
-		$this->import_key = '';
+		$this->active = '';
+		$this->note = '';
+		$this->fk_area = '';
 
 		
 	}
@@ -690,9 +642,9 @@ class Educogroup extends CommonObject
 }
 
 /**
- * Class EducogroupLine
+ * Class EdcuocasignaturaLine
  */
-class EducogroupLine
+class EdcuocasignaturaLine
 {
 	/**
 	 * @var int ID
@@ -702,15 +654,11 @@ class EducogroupLine
 	 * @var mixed Sample line property 1
 	 */
 	
-	public $ref;
-	public $sufix;
+	public $code;
 	public $label;
-	public $fk_academicyear;
-	public $grado_code;
-	public $tms = '';
-	public $date_create = '';
-	public $statut;
-	public $import_key;
+	public $active;
+	public $note;
+	public $fk_area;
 
 	/**
 	 * @var mixed Sample line property 2

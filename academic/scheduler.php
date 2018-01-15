@@ -33,7 +33,10 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 dol_include_once('/educo/class/educopensum.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
+dol_include_once('/educo/class/educoteachersubject.class.php');
+dol_include_once('/educo/class/educohorario.class.php');
 dol_include_once('/educo/class/html.formeduco.class.php');
+dol_include_once('/educo/class/educogroup.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
 
 // Load traductions files requiredby by page
@@ -48,31 +51,105 @@ $toselect = GETPOST('toselect', 'array');
 
 $id = GETPOST('id', 'int');
 $academicid = GETPOST('academicid', 'int');
+$groupid = GETPOST('groupid', 'int');
+$teacherid = GETPOST('fk_user', 'int');
+$teachersubjectid = GETPOST('teachersubjectid', 'int');
+$jsonevents = GETPOST('events');
+$events = json_decode($jsonevents);
 
+//var_dump($gruopid);
 $object = new Educopensum($db);
 //academic
 $academic = new Educoacadyear($db);
+$group = new Educogroup($db);
+$teachersubject = new Educoteachersubject($db);
+$teacher = new User($db);
 if ($academicid > 0 || !empty($ref))
     $ret = $academic->fetch($academicid, $ref);
+if ($groupid > 0 || !empty($ref))
+    $ret = $group->fetch($groupid, $ref);
+if ($teacherid > 0 || !empty($ref))
+    $ret = $teacher->fetch($teacherid, $ref);
+if ($teachersubjectid > 0)
+    $ret = $teachersubject->fetch($teachersubjectid);
+if (is_array($events) && GETPOST('save')) {
+    foreach ($events as $e) {
+        $newevent = new Educohorario($db);
+        if (!$e->id) {
+            $newevent->datep = strtotime($e->start);
+            $newevent->datef = strtotime($e->end);
+            $newevent->duration = ($newevent->datef - $newevent->datep) / 3600;
+            $newevent->fk_group = $groupid;
+            $newevent->fk_teach_sub = $teachersubjectid;
+            $newevent->grado_code = $group->grado_code;
+            $newevent->subject_code = $teachersubject->asignature_code;
+            $res = $newevent->create($user);
+            if ($res > 0)
+                setEventMessages($langs->trans('AddedClass'), null);
+            else
+                $error++;
+        } elseif ($e->edit) {
+            $newevent->fetch($e->id);
+            //  var_dump($newevent->id);
+            $newevent->datep = strtotime($e->start);
+            $newevent->datef = strtotime($e->end);
+            $newevent->duration = ($newevent->datef - $newevent->datep) / 3600;
+            $res = $newevent->update($user);
+            if ($res > 0)
+                setEventMessages($langs->trans('EditedClass'), null);
+            else
+                $error++;
+        }
+        if ($error) {
+            // Creation KO
+            if (!empty($newevent->errors))
+                setEventMessages(null, $newevent->errors, 'errors');
+            else
+                setEventMessages($newevent->error, null, 'errors');
+            $action = 'edit';
+        }
+    }
+}
+if ($action == 'delete') {
+    //$group=new Educogroup($db);
+    // $group->fetch($event['groupid']);   
+    $event = new Educohorario($db);
+    $event->fetch(GETPOST('id', 'int'));
+    $res = $event->delete($user);
+    if ($res > 0)
+        setEventMessages($langs->trans('ClassDeleted'), null);
+    else {
+        // Creation KO
+        if (!empty($newevent->errors))
+            setEventMessages(null, $newevent->errors, 'errors');
+        else
+            setEventMessages($newevent->error, null, 'errors');
+        $action = 'edit';
+    }
+}
+
 $head = academicyear_header($academic);
 //diccioonarios
 $formeduco = new FormEduco($db);
-$form=new Form($db);
+$form = new Form($db);
+
+$subjects_grade = fetchSubjectsGrade($academicid, $group->grado_code, $group->id);
+$subjects_teacher = fetchTeacherSubjects($academicid, $teacherid);
 $css = array(
     'educo/js/fullcalendar/fullcalendar.css',
-      'educo/css/scheduler.css'
+    'educo/css/scheduler.css'
 );
 $js = array(
     'educo/js/fullcalendar/lib/moment.min.js',
     'educo/js/fullcalendar/fullcalendar.min.js',
     'educo/js/fullcalendar/locale/es.js',
-    'educo/js/scheduler_subjects.js'
+    'educo/js/scheduler.js'
 );
 
 llxHeader('', 'Scheduler', 'manual', null, 0, 0, $js, $css);
 
+dol_fiche_head($head, 'scheduler', $langs->trans("AcademicYearCard"), 0, 'generic');
 
-dol_fiche_head($head, 'scheduler');
 //baner
 print '<div class="arearef heightref valignmiddle" width="100%">';
 print '<table class="tagtable liste" >' . "\n";
@@ -80,81 +157,92 @@ print '<tr><td width="30%">' . $langs->trans("AcademicYear") . '</td><td width="
 $academic->next_prev_filter = "te.fournisseur = 1";
 print $form->showrefnav($academic, 'academicid', '', ($user->societe_id ? 0 : 1), 'rowid', 'ref', '', '');
 print '</td></tr></table>';
-print 'grupo: '.$formeduco->select_groups('fk_group', $academicid, GETPOST('fk_group','int')).'<br>';
-print 'docente: '. $form->select_dolusers($fk_user, 'fk_user', $show_empty).'<br>';
-print 'materias: '. $form->selectarray('subject', array()).'<br>';
+print '<form method="POST" id="form" action="' . $_SERVER["PHP_SELF"] . '">';
+print '<input type="hidden" name="action" value="add">';
+print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
+print '<input type="hidden" name="academicid" value="' . $academicid . '">';
+print 'grupo: ' . $formeduco->select_groups('groupid', $academicid, $groupid, 1) . '<br>';
+print 'docente: ' . $form->select_dolusers(GETPOST('fk_user', 'int'), 'fk_user', 1) . '<br>';
+print '<div class="center">'
+        // . '<input type="submit" class="button" id="save" name="save" value="' . $langs->trans("Save") . '"> '
+        . '<input type="submit" class="button" name="refresh" value="' . $langs->trans("ToFilter") . '"> '
+        . '</div>';
+$array = array();
+if (is_array($subjects_grade)) {
+    foreach (is_array($subjects_teacher) ? $subjects_teacher : array() as $s) {
+        if (count($subjects_grade) > 0)
+            $grades = array_column($subjects_grade, 'grado_code');
+        else
+            $grades = array('');
+        $key = in_array($s->grado_code, $grades) ? $s->rowid . '" disabled="disabled' : $s->rowid;
+        $array[$key] = $s->subject_label;
+    }
+}else $array=array(-1=>$langs->trans('SelectAnyGroup'));
+if(count($array)<=0)$array=array(-1=>$langs->trans('SelectAnyTeacher'));
+print '<br>';
 ?>
-<div id='calendar' class="ui-sta"></div>
-<input id='dol_url' type="hidden" value="<?php print DOL_URL_ROOT?>">
-<input id='academicid' type="hidden" value="<?php print $academicid?>">
+<br>
+<table border="0">
+    <thead>
+        <tr class="liste_titre">
+            <th class="liste_titre" id="title_grade"><?php print $group->label ?></th>
+            <th class="liste_titre" id="title_teacher"><?php print $teacher->getFullName($langs) ?></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="liste_titre"><td></td><td><?php print $langs->trans('SubjectTeacherAvilable') . $form->selectarray('teachersubjectid', $array, GETPOST('teachersubjectid', 'int'))?></td></tr>
+        <tr>
+            <td width="20%" valign="top" halign="right">
+                <div class="box">
+                    <table style="margin-top: 30px" summary="Estadísticas" class="noborder boxtable nohover" width="100%">
+                        <tbody>
+                            <tr class="liste_titre">
+                                <th class="liste_titre">Materias</th>
+                            </tr>
+                            <tr class="impair">
+                                <td id="pensum_grado" class="tdboxstats nohover flexcontainer">
+                                    <?php
+                                    foreach (is_array($subjects_grade) ? $subjects_grade : array() as $s) {
+                                        print '<a class="boxstatsindicator thumbstat nobold nounderline">';
+                                        print'<div class="boxstats" title="' . $s->subject_label . '">';
+                                        print '<span class="boxstatstext">' . $s->subject_label . '</span><br>';
+                                        print '<span class="boxstatsindicator">' . $s->total_duration . '/' . $s->horas . '</span>';
+                                        print '<input type="hidden" name="subject_pensum[]" value="">';
+                                        print '</div>';
+                                        print '</a>';
+                                    }
+                                    ?>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+            <td ><div style="
+                      height: 300px;
+                      overflow-x: hidden;
+                      overflow-y: auto; ">
+                    <div id='calendar' class="ui-sta">
+                    </div>
+                </div></td>
+        </tr>
+    </tbody>
+</table>
+<?php
+print '<div class="center">'
+        . '<input type="submit" class="button" id="save" name="save" value="' . $langs->trans("Save") . '"> '
+        // . '<input type="submit" class="button" name="refresh" value="' . $langs->trans("Refresh") . '"> '
+        . '</div>';
+?>
+</form>
+
+<input id='dol_url' type="hidden" value="<?php print DOL_URL_ROOT ?>">
+<input id='academicid' type="hidden" value="<?php print $academicid ?>">
 
 <script>
-    var events_array = [
-        {
-            title: 'Test1',
-            start: new Date(2017, 12, 20),
-            tip: 'Personal tip 1'},
-        {
-            title: 'Test2',
-            start: new Date(2017, 12, 21),
-            tip: 'Personal tip 2'}
-    ];
-   
-    var id=0;
-    $('#calendar').fullCalendar({
-        columnFormat: 'dddd',
-        slotLabelFormat: 'h(:mm)a',
-        allDaySlot: false,
-        height: 'auto',
-        selectable: true,
-        events: events_array,
-        eventRender: function (event, element) {
-            element.attr('title', event.tip);
-        },
-        select: function (start, end, jsEvent, view) {
-            //var abc = prompt('Enter Title');
-          //  var allDay = !start.hasTime && !end.hasTime;
-            var newEvent = new Object();
-            newEvent.title = $("#fk_user").select2('data').text+"\n"+ $('#subject').text();
-            newEvent.id=id++;
-            newEvent.start = moment(start).format();
-             newEvent.end = moment(end).format();
-            newEvent.allDay = false;
-            $('#calendar').fullCalendar('renderEvent', newEvent);
-        },
-        // snapDuration:"00:30",
-        // titleFormat: "[<?php print $medico->firstname . ' ' . $medico->lastname . ' ' . $medico->job; ?>, citas] D [de] MMMM YYYY",
-//        customButtons: {
-//            myCustomButton: {
-//                text: 'custom!',
-//                click: function () {
-//                    alert('clicked the custom button!');
-//                }
-//            }
-//        },
-        header: {
-            left: 'myCustomButton',
-            center: '',
-            right: ''
-        },
-        lang: 'es',
-        //   defaultDate: moment('<?php echo ($date ? $date : date('Y-m-d')) ?>'),
-// defaultDate: '<?php echo date('Y-m-d') ?>',
-        defaultView: 'agendaWeek',
-        editable: true,
-        eventLimit: true, // allow "more" link when too many events
-        start: '2014-01-01',
-        end: '2016-01-01',
-        slotDuration: '1:00',
-        //  minTime: '<?php echo $conf->global->MIIPS_HORA_INICIO ?>',
-        //maxTime: '<?php echo$conf->global->MIIPS_HORA_FIN ?>'
-        minTime: '7:00',
-        maxTime: '18:00',
-        droppable: true, // this allows things to be dropped onto the calendar
-        dragRevertDuration: 0
-       
-    });
-   $( ".fc-agenda-slots" ).css( "height", 200 );
+
+
+
 </script>
 <?php
 print '</div>';

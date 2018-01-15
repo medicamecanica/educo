@@ -6,15 +6,16 @@
  * and open the template in the editor.
  */
 print '<script>$(document).ready(function() {
+   
     $("input[type=radio][name=newsoc]").change(function() {
     console.log(this.value);
         if (this.value == "0") {
-         $("#s2id_fk_soc").show("slow");
-          $("#fk_soc").select2("enable",true);
+         $("#td_fk_soc").show("slow");
+         
           $("#create_soc").hide("slow");
         }
         else {
-       $("#s2id_fk_soc").hide("slow");
+       $("#td_fk_soc").hide("slow");
             $("#fk_soc").select2("enable",false);
           
             $("#create_soc").show("slow");  
@@ -25,14 +26,15 @@ print '<script>$(document).ready(function() {
 print '<table class="border centpercent">';
  $showempty=1;
  $morecss="minwidth200";
-print '<tr><td width="20%" class="fieldrequired">' . $langs->trans("Fieldfk_soc") . '</td><td width="20%">'
-       
+print '<tr><td width="20%" class="fieldrequired" >' .
+        $langs->trans("Fieldfk_soc") . '</td>'
+        . '<td width="20%" id="td_fk_soc" '.(GETPOST('newsoc','int')?'style="display: none;"':'').'>'       
         . $form->select_company($object->fk_soc, 'fk_soc', $filter, $showempty, $showtype, $forcecombo, $events, $limit, $morecss, $moreparam, $selected_input_value, $hidelabel, $ajaxoptions)
-        . '</td><td width="10%"><input type="radio"  id="#newsoc" name="newsoc" value="1"> Nuevo<br>'
-        . '</td><td ><input type="radio" id="#existentsoc" checked name="newsoc" value="0"> Existente<br>'
+        . '</td><td width="10%"><input type="radio"  id="#newsoc" '.(GETPOST('newsoc','int')?'checked':'').' name="newsoc" value="1"> Nuevo<br>'
+        . '</td><td ><input type="radio" id="#existentsoc" '.(GETPOST('newsoc','int')?'':'checked').' name="newsoc" value="0"> Existente<br>'
         . '</td></tr>';
 print '</table>';
-print '<div id="create_soc" style="display: none;">';
+print '<div id="create_soc" '.(GETPOST('newsoc','int')?'':'style="display: none;"').'>';
 /**
  *  Creation
  */
@@ -452,34 +454,34 @@ if ($mysoc->localtax1_assuj == "1" && $mysoc->localtax2_assuj == "1") {
     print $form->selectyesno('localtax2assuj_value', (isset($conf->global->THIRDPARTY_DEFAULT_USELOCALTAX2) ? $conf->global->THIRDPARTY_DEFAULT_USELOCALTAX2 : 0), 1);
     print '</td></tr>';
 }
-
-// Type - Size
-print '<tr><td>' . fieldLabel('ThirdPartyType', 'typent_id') . '</td><td class="maxwidthonsmartphone">' . "\n";
-$sortparam = (empty($conf->global->SOCIETE_SORT_ON_TYPEENT) ? 'ASC' : $conf->global->SOCIETE_SORT_ON_TYPEENT); // NONE means we keep sort of original array, so we sort on position. ASC, means next function will sort on label.
-print $form->selectarray("typent_id", $formcompany->typent_array(0), $soc->typent_id, 0, 0, 0, '', 0, 0, 0, $sortparam);
-if ($user->admin)
-    print ' ' . info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"), 1);
-print '</td>';
-print '<td>' . fieldLabel('Staff', 'effectif_id') . '</td><td class="maxwidthonsmartphone">';
-print $form->selectarray("effectif_id", $formcompany->effectif_array(0), $soc->effectif_id);
-if ($user->admin)
-    print ' ' . info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"), 1);
-print '</td></tr>';
-
-// Legal Form
-print '<tr><td>' . fieldLabel('JuridicalStatus', 'forme_juridique_code') . '</td>';
-print '<td colspan="3" class="maxwidthonsmartphone">';
-if ($soc->country_id) {
-    print $formcompany->select_juridicalstatus($soc->forme_juridique_code, $soc->country_code, '', 'forme_juridique_code');
-} else {
-    print $countrynotdefined;
-}
-print '</td></tr>';
-
-// Capital
-print '<tr><td>' . fieldLabel('Capital', 'capital') . '</td>';
-print '<td colspan="3"><input type="text" name="soccapital" id="capital" size="10" value="' . $soc->capital . '"> ';
-print '<span class="hideonsmartphone">' . $langs->trans("Currency" . $conf->currency) . '</span></td></tr>';
+//
+//// Type - Size
+//print '<tr><td>' . fieldLabel('ThirdPartyType', 'typent_id') . '</td><td class="maxwidthonsmartphone">' . "\n";
+//$sortparam = (empty($conf->global->SOCIETE_SORT_ON_TYPEENT) ? 'ASC' : $conf->global->SOCIETE_SORT_ON_TYPEENT); // NONE means we keep sort of original array, so we sort on position. ASC, means next function will sort on label.
+//print $form->selectarray("typent_id", $formcompany->typent_array(0), $soc->typent_id, 0, 0, 0, '', 0, 0, 0, $sortparam);
+//if ($user->admin)
+//    print ' ' . info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"), 1);
+//print '</td>';
+//print '<td>' . fieldLabel('Staff', 'effectif_id') . '</td><td class="maxwidthonsmartphone">';
+//print $form->selectarray("effectif_id", $formcompany->effectif_array(0), $soc->effectif_id);
+//if ($user->admin)
+//    print ' ' . info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"), 1);
+//print '</td></tr>';
+//
+//// Legal Form
+//print '<tr><td>' . fieldLabel('JuridicalStatus', 'forme_juridique_code') . '</td>';
+//print '<td colspan="3" class="maxwidthonsmartphone">';
+//if ($soc->country_id) {
+//    print $formcompany->select_juridicalstatus($soc->forme_juridique_code, $soc->country_code, '', 'forme_juridique_code');
+//} else {
+//    print $countrynotdefined;
+//}
+//print '</td></tr>';
+//
+//// Capital
+//print '<tr><td>' . fieldLabel('Capital', 'capital') . '</td>';
+//print '<td colspan="3"><input type="text" name="soccapital" id="capital" size="10" value="' . $soc->capital . '"> ';
+//print '<span class="hideonsmartphone">' . $langs->trans("Currency" . $conf->currency) . '</span></td></tr>';
 
 if (!empty($conf->global->MAIN_MULTILANGS)) {
     print '<tr><td>' . fieldLabel('DefaultLang', 'default_lang') . '</td><td colspan="3" class="maxwidthonsmartphone">' . "\n";

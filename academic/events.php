@@ -33,18 +33,50 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 dol_include_once('/educo/class/educopensum.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
-dol_include_once('/educo/class/educogroup.class.php');
+dol_include_once('/educo/class/educohorario.class.php');
+dol_include_once('/educo/class/event.class.php');
 dol_include_once('/educo/class/html.formeduco.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
 
 // Load traductions files requiredby by page
 $langs->load("educo");
 $langs->load("other");
-
+$action = GETPOST('action');
 $academicid = GETPOST('academicid', 'int');
+$groupid = GETPOST('groupid', 'int');
 $teacherid = GETPOST('teacherid', 'int');
-$groupid= GETPOST('groupid', 'int');
-$group=new Educogroup($db);
-$group->fetch($groupid);
-$subjects = fetchSubjectsPesum($academicid, $group->grado_code,$teacherid);
-print json_encode($subjects);
+if ($action == 'create') {
+    $event = (GETPOST("event", 'array'));
+    //$group=new Educogroup($db);
+    // $group->fetch($event['groupid']);   
+    $newevent = new Educohorario($db);
+    $newevent->datep = strtotime($event['start']);
+    $newevent->datef = strtotime($event['end']);
+    $newevent->duration = ($newevent->datef - $newevent->datep) / 3600;
+    $newevent->fk_group = $event['groupid'];
+    $newevent->fk_teach_sub = $event['teachsubid'];
+    $newevent->grado_code = $event['grade_code'];
+    $newevent->subject_code = $event['subject_code'];
+    $res = $newevent->create($user);
+    if ($res > 0)
+        die(json_encode("ok"));
+    else
+        die(json_encode($newevent->errors));
+}
+
+$horario = fetchHorario($academicid, $groupid, $teacherid);
+
+$array = array();
+foreach ($horario as $e) {
+
+    $event = new Event($e);
+    $event->id = $e->rowid;
+    $event->title = $e->teacher_name . ":\n" . $e->subject_label;
+    $event->setStart($e->datep);
+    $event->setEnd($e->datef);
+   // $event->SyncWeek();
+    $event->resourceIds = array('a', 'b');
+    $array[] = $event->toArray();
+}
+print json_encode($array);
+die;

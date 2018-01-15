@@ -1,3 +1,4 @@
+
 --
 -- Estructura de tabla para la tabla `llx_educo_student`
 --
@@ -16,5 +17,7 @@ CREATE TABLE `llx_educo_student` (
   `fk_soc` int(11) NOT NULL,
   `tms` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `status` int(11) DEFAULT NULL,
-  `import_key` varchar(14) DEFAULT NULL
-)
+  `import_key` varchar(14) DEFAULT NULL,
+  `grade_max` int(11) DEFAULT '0',
+  `photo` varchar(45) DEFAULT NULL
+);

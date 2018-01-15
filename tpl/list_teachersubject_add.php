@@ -16,19 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 // Action to add record
-if ($action == 'add') {
-    if (GETPOST('cancel')) {
-        $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/list.php', 1);
-        header("Location: " . $urltogo);
-        exit;
-    }
+ if ($action == 'add'&&!GETPOST('cancel')) {
+//    if (GETPOST('cancel')) {
+//        $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/list.php', 1);
+//        header("Location: " . $urltogo);
+//        exit;
+//    }
 
     $error = 0;
 
     /* object_prop_getpost_prop */
-
-    $object->ref = $academic->ref . '-' . $user_login . '-' . $pensum->asignature_code;
+    $u=new User($db);
+    $u->fetch(GETPOST('fk_user', 'int'));
+    $object->ref = $academic->ref . '-' . $u->login . '-' . $pensum->asignature_code;
     //$object->description = GETPOST('description', 'alpha');
     // $object->status = GETPOST('status', 'int');
     $object->asignature_code =$pensum->asignature_code;

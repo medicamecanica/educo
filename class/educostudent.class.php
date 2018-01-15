@@ -237,6 +237,7 @@ class Educostudent extends CommonObject
 		$sql .= " t.fk_soc,";
 		$sql .= " t.tms,";
 		$sql .= " t.status,";
+                $sql .= " t.photo,";
 		$sql .= " t.import_key";
 
 		
@@ -271,6 +272,7 @@ class Educostudent extends CommonObject
 				$this->fk_soc = $obj->fk_soc;
 				$this->tms = $this->db->jdate($obj->tms);
 				$this->status = $obj->status;
+                                $this->photo = $obj->photo;
 				$this->import_key = $obj->import_key;
 
 				
@@ -446,6 +448,9 @@ class Educostudent extends CommonObject
 		if (isset($this->import_key)) {
 			 $this->import_key = trim($this->import_key);
 		}
+                if (isset($this->photo)) {
+			 $this->photo = trim($this->photo);
+		}
 
 		
 
@@ -467,7 +472,8 @@ class Educostudent extends CommonObject
 		$sql .= ' fk_soc = '.(isset($this->fk_soc)?$this->fk_soc:"null").',';
 		$sql .= ' tms = '.(dol_strlen($this->tms) != 0 ? "'".$this->db->idate($this->tms)."'" : "'".$this->db->idate(dol_now())."'").',';
 		$sql .= ' status = '.(isset($this->status)?$this->status:"null").',';
-		$sql .= ' import_key = '.(isset($this->import_key)?"'".$this->db->escape($this->import_key)."'":"null");
+		$sql .= ' import_key = '.(isset($this->import_key)?"'".$this->db->escape($this->import_key)."'":"null").',';
+                $sql .= ' photo = '.(isset($this->photo)?"'".$this->db->escape($this->photo)."'":"null");
 
         
 		$sql .= ' WHERE rowid=' . $this->id;
@@ -625,9 +631,13 @@ class Educostudent extends CommonObject
         $result = '';
         $companylink = '';
 
-        $label = '<u>' . $langs->trans("MyModule") . '</u>';
+        $label = '<u>' . $langs->trans("Student") . '</u>';
         $label.= '<br>';
         $label.= '<b>' . $langs->trans('Ref') . ':</b> ' . $this->ref;
+         $label.= '<br>';
+        $label.= '<b>' . $langs->trans('Name') . ':</b> ' . $this->getFullName($langs);
+          $label.= '<br>';
+        $label.= '<b>' . $langs->trans('Photo') . ':</b><br>' . $this->getPhotoUrl(100,'mini');
 
         $url = DOL_URL_ROOT.'/educo/student/card.php?id='.$this->id;
         
@@ -743,6 +753,26 @@ class Educostudent extends CommonObject
 		$this->import_key = '';
 
 		
+	}
+        /**
+	 *  Return a link with photo
+	 * 	Use this->id,this->photo
+	 *
+	 *	@param	int		$width			Width of image
+	 *	@param	int		$height			Height of image
+	 *  @param	string	$cssclass		Force a css class
+     * 	@param	string	$imagesize		'mini', 'small' or '' (original)
+	 *	@return	string					String with URL link
+	 */
+	function getPhotoUrl($width, $height, $cssclass='', $imagesize='')
+	{
+		$result='';
+
+		$result.='<a href="'.DOL_URL_ROOT.'/user/card.php?id='.$this->id.'">';
+	    $result.=Form::showphoto('educo', $this, $width, $height, 0, $cssclass, $imagesize);
+	    $result.='</a>';
+
+	    return $result;
 	}
 
 }

@@ -23,22 +23,22 @@
  * @author ander
  */
 class FormEduco {
-     private $db;
+
+    private $db;
     public $error;
 
-
     /**
-     *	Constructor
+     * 	Constructor
      *
-     *	@param	DoliDB		$db      Database handler
+     * 	@param	DoliDB		$db      Database handler
      */
-    function __construct($db)
-    {
+    function __construct($db) {
         $this->db = $db;
 
         return 1;
     }
-  /**
+
+    /**
      *  Return a HTML select list of bank accounts
      *
      *  @param  string	$htmlname          	Name of select zone
@@ -50,218 +50,239 @@ class FormEduco {
      *  @param  string  $moreattrib         More attributes on HTML select tag
      * 	@return	void
      */
-    function select_dictionary($htmlname,$dictionarytable,$keyfield='code',$labelfield='label',$selected='',$useempty=0,$moreattrib='')
-    {
+    function select_dictionary($htmlname, $dictionarytable, $keyfield = 'code', $labelfield = 'label', $selected = '', $useempty = 0, $moreattrib = '') {
         global $langs, $conf;
 
         $langs->load("admin");
 
-        $sql = "SELECT rowid, ".$keyfield.", ".$labelfield;
-        $sql.= " FROM ".MAIN_DB_PREFIX.$dictionarytable;
-        $sql.= " WHERE active=1 ";
-        $sql.= " ORDER BY ".$labelfield;
+        $sql = "SELECT rowid, " . $keyfield . ", " . $labelfield;
+        $sql .= " FROM " . MAIN_DB_PREFIX . $dictionarytable;
+        $sql .= " WHERE active=1 ";
+        $sql .= " ORDER BY " . $labelfield;
 
-        dol_syslog(get_class($this)."::select_dictionary", LOG_DEBUG);
+        dol_syslog(get_class($this) . "::select_dictionary", LOG_DEBUG);
         $result = $this->db->query($sql);
-        if ($result)
-        {
+        if ($result) {
             $num = $this->db->num_rows($result);
             $i = 0;
-            if ($num)
-            {
-                print '<select id="select'.$htmlname.'" class="flat selectdictionary" name="'.$htmlname.'"'.($moreattrib?' '.$moreattrib:'').'>';
-                if ($useempty == 1 || ($useempty == 2 && $num > 1))
-                {
+            if ($num) {
+                print '<select id="select' . $htmlname . '" class="flat selectdictionary" name="' . $htmlname . '"' . ($moreattrib ? ' ' . $moreattrib : '') . '>';
+                if ($useempty == 1 || ($useempty == 2 && $num > 1)) {
                     print '<option value="-1">&nbsp;</option>';
                 }
 
-                while ($i < $num)
-                {
+                while ($i < $num) {
                     $obj = $this->db->fetch_object($result);
-                    if ($selected == $obj->rowid || $selected == $obj->$keyfield)
-                    {
-                        print '<option value="'.$obj->$keyfield.'" selected>';
-                    }
-                    else
-                    {
-                        print '<option value="'.$obj->$keyfield.'">';
+                    if ($selected == $obj->rowid || $selected == $obj->$keyfield) {
+                        print '<option value="' . $obj->$keyfield . '" selected>';
+                    } else {
+                        print '<option value="' . $obj->$keyfield . '">';
                     }
                     print $obj->$labelfield;
                     print '</option>';
                     $i++;
                 }
                 print "</select>";
-            }
-            else
-			{
+            } else {
                 print $langs->trans("DictionaryEmpty");
             }
-        }
-        else {
+        } else {
             dol_print_error($this->db);
         }
     }
-    	/**
-	 * Load object in memory from the database
-	 *
-	 * @param string $sortorder Sort Order
-	 * @param string $sortfield Sort field
-	 * @param int    $limit     offset limit
-	 * @param int    $offset    offset limit
-	 * @param array  $filter    filter array
-	 * @param string $filtermode filter mode (AND or OR)
-	 *
-	 * @return int <0 if KO, >0 if OK
-	 */
-	private function fetchSubjectsPesum($academicid=0,$sortorder='', $sortfield='', $limit=0, $offset=0)
-	{
-		dol_syslog(__METHOD__, LOG_DEBUG);
 
-		$sql = 'SELECT';
-		$sql .= ' t.rowid,';
-		
-		$sql .= " t.ref,";
-		$sql .= " t.fk_academicyear,";
-		$sql .= " t.horas,";
-		$sql .= " t.date_create,";
-		$sql .= " t.tms,";
-		$sql .= " t.statut,";
-		$sql .= " t.import_key,";
-		$sql .= " t.asignature_code,";
-		$sql .= " t.grado_code,";
-                $sql .= " a.label as subject_name,";
-                 $sql .= " a.code as subject_code,";
-                $sql .= " g.label as grado_name";
+    /**
+     * Load object in memory from the database
+     *
+     * @param string $sortorder Sort Order
+     * @param string $sortfield Sort field
+     * @param int    $limit     offset limit
+     * @param int    $offset    offset limit
+     * @param array  $filter    filter array
+     * @param string $filtermode filter mode (AND or OR)
+     *
+     * @return int <0 if KO, >0 if OK
+     */
+    private function fetchSubjectsPesum($academicid = 0, $sortorder = '', $sortfield = '', $limit = 0, $offset = 0) {
+        dol_syslog(__METHOD__, LOG_DEBUG);
 
-		
-		$sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_pensum as t';
-                $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'edcuo_c_asignatura as a on t.asignature_code=a.code';
-                $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'educo_c_grado as g on t.grado_code=g.code';
+        $sql = 'SELECT';
+        $sql .= ' t.rowid,';
 
-		// Manage filter
-		
-		$sql.= ' WHERE 1 = 1';
-		if (! empty($conf->multicompany->enabled)) {
-		    $sql .= " AND entity IN (" . getEntity("educopensum", 1) . ")";
-		}
-		 $sql .= " AND t.fk_academicyear=".$academicid;
-		if (!empty($sortfield)) {
-			$sql .= $this->db->order($sortfield,$sortorder);
-		}
-		if (!empty($limit)) {
-		 $sql .=  ' ' . $this->db->plimit($limit + 1, $offset);
-		}
+        $sql .= " t.ref,";
+        $sql .= " t.fk_academicyear,";
+        $sql .= " t.horas,";
+        $sql .= " t.date_create,";
+        $sql .= " t.tms,";
+        $sql .= " t.statut,";
+        $sql .= " t.import_key,";
+        $sql .= " t.asignature_code,";
+        $sql .= " t.grado_code,";
+        $sql .= " a.label as subject_name,";
+        $sql .= " a.code as subject_code,";
+        $sql .= " g.label as grado_name";
 
-		$this->lines = array();
-               // var_dump($sql);
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			$num = $this->db->num_rows($resql);
-                        $line =  array();
-			while ($obj = $this->db->fetch_object($resql)) {
-				$line[] = $obj;
-			}
-			$this->db->free($resql);
 
-			return $line;
-		} else {
-			$this->errors[] = 'Error ' . $this->db->lasterror();
-			dol_syslog(__METHOD__ . ' ' . implode(',', $this->errors), LOG_ERR);
+        $sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_pensum as t';
+        $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'edcuo_c_asignatura as a on t.asignature_code=a.code';
+        $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'educo_c_grado as g on t.grado_code=g.code';
 
-			return - 1;
-		}
-	}
-        function select_pensum($htmlname,$academicid,$id,$show_empty=0) {
-            global $form;
-           // $form=new Form($this->db);
-            $subjects = $this->fetchSubjectsPesum($academicid);
-             $array=array();
-            if(is_array($subjects)){            
-                foreach ($subjects as $s) {
-                    $array[$s->rowid]=$s->grado_name.' - '.$s->subject_name;
-                }
-            }else{
-                $array=$this->errors;
-            }
-            return $form->selectarray($htmlname, $array, $id, $show_empty);            
+        // Manage filter
+
+        $sql .= ' WHERE 1 = 1';
+        if (!empty($conf->multicompany->enabled)) {
+            $sql .= " AND entity IN (" . getEntity("educopensum", 1) . ")";
         }
-        /**
-	 * Load object in memory from the database
-	 *
-	 * @param string $sortorder Sort Order
-	 * @param string $sortfield Sort field
-	 * @param int    $limit     offset limit
-	 * @param int    $offset    offset limit
-	 * @param array  $filter    filter array
-	 * @param string $filtermode filter mode (AND or OR)
-	 *
-	 * @return int <0 if KO, >0 if OK
-	 */
-	private function fetchGroups($academicid,$sortorder='', $sortfield='', $limit=0, $offset=0)
-	{
-		dol_syslog(__METHOD__, LOG_DEBUG);
+        $sql .= " AND t.fk_academicyear=" . $academicid;
+        if (!empty($sortfield)) {
+            $sql .= $this->db->order($sortfield, $sortorder);
+        }
+        if (!empty($limit)) {
+            $sql .= ' ' . $this->db->plimit($limit + 1, $offset);
+        }
 
-		$sql = 'SELECT';
-		$sql .= ' t.rowid,';
-		
-		$sql .= " t.ref,";
-		$sql .= " t.sufix,";
-		$sql .= " t.label,";
-		$sql .= " t.fk_academicyear,";
-		$sql .= " t.grado_code,";
-		$sql .= " t.tms,";
-		$sql .= " t.date_create,";
-		$sql .= " t.statut,";
-		$sql .= " t.import_key";
+        $this->lines = array();
+        // var_dump($sql);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $num = $this->db->num_rows($resql);
+            $line = array();
+            while ($obj = $this->db->fetch_object($resql)) {
+                $line[] = $obj;
+            }
+            $this->db->free($resql);
 
-		
-		$sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_group as t';
+            return $line;
+        } else {
+            $this->errors[] = 'Error ' . $this->db->lasterror();
+            dol_syslog(__METHOD__ . ' ' . implode(',', $this->errors), LOG_ERR);
 
-		// Manage filter
-		
-		$sql.= ' WHERE 1 = 1';
-                 $sql .= " AND t.fk_academicyear =$academicid";
-		if (! empty($conf->multicompany->enabled)) {
-		    $sql .= " AND entity IN (" . getEntity("educogroup", 1) . ")";
-		}
-		
-		if (!empty($sortfield)) {
-			$sql .= $this->db->order($sortfield,$sortorder);
-		}
-		if (!empty($limit)) {
-		 $sql .=  ' ' . $this->db->plimit($limit + 1, $offset);
-		}
-		$lines = array();
-		$resql = $this->db->query($sql);
-		if ($resql) {
-			$num = $this->db->num_rows($resql);
+            return - 1;
+        }
+    }
 
-			while ($obj = $this->db->fetch_object($resql)) {
-				$lines[] = $obj;
-			}
-			$this->db->free($resql);
-			return $lines;
-		} else {
-			$this->errors[] = 'Error ' . $this->db->lasterror();
-			dol_syslog(__METHOD__ . ' ' . implode(',', $this->errors), LOG_ERR);
+    function select_pensum($htmlname, $academicid, $id, $show_empty = 0) {
+        global $form;
+        // $form=new Form($this->db);
+        $subjects = $this->fetchSubjectsPesum($academicid);
+        $array = array();
+        if (is_array($subjects)) {
+            foreach ($subjects as $s) {
+                $array[$s->rowid] = $s->grado_name . ' - ' . $s->subject_name;
+            }
+        } else {
+            $array = $this->errors;
+        }
+        return $form->selectarray($htmlname, $array, $id, $show_empty);
+    }
 
-			return - 1;
-		}
-	}
-         function select_groups($htmlname,$academicid,$id,$show_empty=0) {
-            global $form;
-           // $form=new Form($this->db);
-            $groups = $this->fetchGroups($academicid);
-             $array=array();
-            
-            if(is_array($groups)){            
+    /**
+     * Load object in memory from the database
+     *
+     * @param string $sortorder Sort Order
+     * @param string $sortfield Sort field
+     * @param int    $limit     offset limit
+     * @param int    $offset    offset limit
+     * @param array  $filter    filter array
+     * @param string $filtermode filter mode (AND or OR)
+     *
+     * @return int <0 if KO, >0 if OK
+     */
+    private function fetchGroups($academicid, $sortorder = '', $sortfield = '', $limit = 0, $offset = 0) {
+        dol_syslog(__METHOD__, LOG_DEBUG);
+
+        $sql = 'SELECT';
+        $sql .= ' t.rowid,';
+
+        $sql .= " t.ref,";
+        $sql .= " t.sufix,";
+        $sql .= " t.label,";
+        $sql .= " t.fk_academicyear,";
+        $sql .= " t.grado_code,";
+        $sql .= " t.tms,";
+        $sql .= " t.date_create,";
+        $sql .= " t.statut,";
+        $sql .= " t.import_key";
+
+
+        $sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_group as t';
+
+        // Manage filter
+
+        $sql .= ' WHERE 1 = 1';
+        $sql .= " AND t.fk_academicyear =$academicid";
+        if (!empty($conf->multicompany->enabled)) {
+            $sql .= " AND entity IN (" . getEntity("educogroup", 1) . ")";
+        }
+
+        if (!empty($sortfield)) {
+            $sql .= $this->db->order($sortfield, $sortorder);
+        }
+        if (!empty($limit)) {
+            $sql .= ' ' . $this->db->plimit($limit + 1, $offset);
+        }
+        $lines = array();
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $num = $this->db->num_rows($resql);
+
+            while ($obj = $this->db->fetch_object($resql)) {
+                $lines[] = $obj;
+            }
+            $this->db->free($resql);
+            return $lines;
+        } else {
+            $this->errors[] = 'Error ' . $this->db->lasterror();
+            dol_syslog(__METHOD__ . ' ' . implode(',', $this->errors), LOG_ERR);
+
+            return - 1;
+        }
+    }
+
+    function select_groups($htmlname, $academicid, $id, $show_empty = 0) {
+        global $form, $langs;
+        $form = new Form($this->db);
+        $groups = $this->fetchGroups($academicid);
+        $array = array();
+        if ($academicid) {
+            if (is_array($groups)) {
                 foreach ($groups as $g) {
-                    $array[$g->rowid]=$g->label;                   
+                    '" code="' . $g->grado_code;
+                    $array[$g->rowid] = $g->label;
                 }
-            }else{
-                $array=$this->errors;
+            } else {
+                $array = $this->errors;
             }
-            
-            return $form->selectarray($htmlname, $array, $id, $show_empty);            
+        } else
+            $array[0] = $langs->trans('SelectAnyAcademic');
+
+        return $form->selectarray($htmlname, $array, $id, $show_empty);
+    }
+
+    function select_academic($htmlname, $id, $show_empty = 0) {
+        global $form;
+        require_once (DOL_DOCUMENT_ROOT . '/educo/class/educoacadyear.class.php');
+        $educoacadyear = new Educoacadyear($this->db);
+        $academics = $educoacadyear->fetchAll();
+
+        $array = array();
+
+        if (is_array($educoacadyear->lines)) {
+            foreach ($educoacadyear->lines as $a) {
+
+                $array[$a->id] = $a->ref;
+            }
+        } else {
+            $array = $this->errors;
         }
+
+        return $form->selectarray($htmlname, $array, $id, $show_empty);
+    }
+
+    function select_student($htmlname, $id,$ref, $url) {
+        print '<input  type="text" id="' . $htmlname . 'ref" name="' . $htmlname . 'ref" value="' . $ref . '">';
+        print '<input class="flat" type="hidden" id="student_url"value="' . $url . '">';
+        print '<input class="flat" type="hidden" id="' . $htmlname . 'id" name="' . $htmlname . 'id" value="'.$id.'">';
+    }
+
 }

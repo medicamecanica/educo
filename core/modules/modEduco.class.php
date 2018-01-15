@@ -195,7 +195,7 @@ class modEduco extends DolibarrModules {
         $this->rights[$r][0] = $this->numero + $r; // Permission id (must not be already used)
         $this->rights[$r][1] = 'Create/Update objects of My Module'; // Permission label
         $this->rights[$r][3] = 1;      // Permission by default for new user (0/1)
-        $this->rights[$r][4] = 'create';    // In php code, permission will be checked by test if ($user->rights->educo->level1->level2)
+        $this->rights[$r][4] = 'write';    // In php code, permission will be checked by test if ($user->rights->educo->level1->level2)
         $this->rights[$r][5] = '';        // In php code, permission will be checked by test if ($user->rights->educo->level1->level2)
 
         $r++;
@@ -239,7 +239,7 @@ class modEduco extends DolibarrModules {
             'titre' => 'Institución/Escuela',
             'mainmenu' => 'educo',
             'leftmenu' => 'inst',
-            'url' => '/educo/estudent/index.php',
+            'url' => '/educo/academic/index.php',
             'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'position' => 1000+$r,
             'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
@@ -257,7 +257,7 @@ class modEduco extends DolibarrModules {
             'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'position' => 1000 + $r,
             'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'perms' => '$user->rights->educo->create', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'perms' => '$user->rights->educo->write', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
             'target' => '',
             'user' => 2);
         $r++;
@@ -271,7 +271,7 @@ class modEduco extends DolibarrModules {
             'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'position' => 1000 + $r,
             'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'perms' => '$user->rights->educo->create', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'perms' => '$user->rights->educo->write', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
             'target' => '',
             'user' => 2);        
         $r++;
@@ -282,7 +282,7 @@ class modEduco extends DolibarrModules {
             'titre' => 'Estudiantes',
             'mainmenu' => 'educo',
             'leftmenu' => 'estudent',
-            'url' => '/educo/estudent/index.php',
+            'url' => '/educo/student/index.php',
             'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'position' => 1000 + $r,
             'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
@@ -300,7 +300,7 @@ class modEduco extends DolibarrModules {
             'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
             'position' => 1000 + $r,
             'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-            'perms' => '$user->rights->educo->create', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'perms' => '$user->rights->educo->write', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
             'target' => '',
             'user' => 2);
         $r++;
@@ -318,6 +318,48 @@ class modEduco extends DolibarrModules {
             'target' => '',
             'user' => 2);                    // 0=Menu for internal users, 1=external users, 2=both
         $r++;
+        //
+        // Example to declare a Left Menu entry into an existing Top menu entry:
+        $this->menu[$r] = array('fk_menu' => 'fk_mainmenu=educo', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type' => 'left', // This is a Left menu entry
+            'titre' => 'Enrollment',
+            'mainmenu' => 'educo',
+            'leftmenu' => 'enrollment',
+            'url' => '/educo/enrollment/index.php',
+            'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'position' => 1000 + $r,
+            'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+            'perms' => '$user->rights->educo->read', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'target' => '',
+            'user' => 2);                    // 0=Menu for internal users, 1=external users, 2=both
+        $r++;
+        // Example to declare a Left Menu entry into an existing Top menu entry:
+        $this->menu[$r] = array('fk_menu' => 'fk_mainmenu=educo,fk_leftmenu=enrollment', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type' => 'left', // This is a Left menu entry
+            'titre' => 'NewEnrollment',
+            'mainmenu' => 'educo',
+            'leftmenu' => 'new_enrrolment',
+            'url' => '/educo/enrollment/card.php?action=create',
+            'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'position' => 1000 + $r,
+            'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+            'perms' => '$user->rights->educo->write', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'target' => '',
+            'user' => 2);
+        $r++;
+        // Example to declare a Left Menu entry into an existing Top menu entry:
+        $this->menu[$r] = array('fk_menu' => 'fk_mainmenu=educo,fk_leftmenu=enrollment', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type' => 'left', // This is a Left menu entry
+            'titre' => 'ListEnrollment',
+            'mainmenu' => 'educo',
+            'leftmenu' => 'list_enrollment',
+            'url' => '/educo/enrollment/list.php',
+            'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'position' => 1000 + $r,
+            'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+            'perms' => '$user->rights->educo->read', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'target' => '',
+            'user' => 2);     
 
         // Exports
         $r = 1;

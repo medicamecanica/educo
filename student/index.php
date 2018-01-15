@@ -1,7 +1,6 @@
 <?php
-
 /*
- * Copyright (C) 2018 ander
+ * Copyright (C) 2017 ander
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+// Change this following line to use the correct relative path (../, ../../, etc)
 $res = 0;
 if (!$res && file_exists("../main.inc.php"))
     $res = @include '../main.inc.php';     // to work if your module directory is into dolibarr root htdocs directory
@@ -33,18 +33,20 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
 dol_include_once('/educo/class/educopensum.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
-dol_include_once('/educo/class/educogroup.class.php');
+dol_include_once('/educo/class/educoteachersubject.class.php');
+dol_include_once('/educo/class/educohorario.class.php');
 dol_include_once('/educo/class/html.formeduco.class.php');
+dol_include_once('/educo/class/educogroup.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
 
 // Load traductions files requiredby by page
 $langs->load("educo");
 $langs->load("other");
 
-$academicid = GETPOST('academicid', 'int');
-$teacherid = GETPOST('teacherid', 'int');
-$groupid= GETPOST('groupid', 'int');
-$group=new Educogroup($db);
-$group->fetch($groupid);
-$subjects = fetchSubjectsPesum($academicid, $group->grado_code,$teacherid);
-print json_encode($subjects);
+$title = $langs->trans('Student');
+llxHeader('', $title);//, 'manual', null, 0, 0, $js, $css);
+
+print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords, 'title_companies', 0, '', '', $limit);
+
+llxFooter();
+$db->close();

@@ -41,13 +41,22 @@ print '<tr><td class="fieldrequired">' . $langs->trans("Fielddocument") . '</td>
 
 //print '<tr><td class="fieldrequired">'.$langs->trans("Fieldstatus").'</td><td><input class="flat" type="text" name="status" value="'.$object->status.'"></td></tr>';
 //print '<tr><td class="fieldrequired">'.$langs->trans("Fieldimport_key").'</td><td><input class="flat" type="text" name="import_key" value="'.$object->import_key.'"></td></tr>';
-// Ajout du logo
-print '<tr class="hideonsmartphone">';
-print '<td>' . fieldLabel('Photo', 'photoinput') . '</td>';
-print '<td colspan="3">';
-print '<input class="flat" type="file" name="photo" id="photoinput" />';
-print '</td>';
-print '</tr>';
+ // Photo
+    print '<tr><td>' . $langs->trans("Photo") . '</td>';
+    print '<td class="hideonsmartphone" valign="middle">';
+    //$object->photo = 'photo.png';
+   // print $form->showphoto('educo', $object) . "\n";
+    //if ($user->rights->educo->write) {
+        if ($object->photo)
+            print "<br>\n";
+        print '<table class="nobordernopadding">';
+        if ($object->photo)
+            print '<tr><td><input type="checkbox" class="flat photodelete" name="deletephoto" id="photodelete"> ' . $langs->trans("Delete") . '<br><br></td></tr>';
+        print '<tr><td>' . $langs->trans("PhotoFile") . '</td></tr>';
+        print '<tr><td><input type="file" class="flat" name="photo" id="photoinput"></td></tr>';
+        print '</table>';
+    //}
+    print '</td></tr>';
 //$form=new Form($db);
 /*
  * Fiche en mode creation

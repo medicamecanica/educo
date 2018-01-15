@@ -205,7 +205,7 @@ $form=new Form($db);
 
 //$help_url="EN:Module_Customers_Orders|FR:Module_Commandes_Clients|ES:Módulo_Pedidos_de_clientes";
 $help_url='';
-$title = $langs->trans('MyModuleListTitle');
+$title = $langs->trans('AcademicYearListTitle');
 
 // Put here content of your page
 

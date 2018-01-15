@@ -1,6 +1,6 @@
 <?php
 
-/*
+/* 
  * Copyright (C) 2018 ander
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,23 +28,16 @@ if (!$res && file_exists("../../../../dolibarr/htdocs/main.inc.php"))
 if (!$res)
     die("Include of main fails");
 // Change this following line to use the correct relative path from htdocs
-require_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
-require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
-require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
-dol_include_once('/educo/class/educopensum.class.php');
-dol_include_once('/educo/class/educoacadyear.class.php');
-dol_include_once('/educo/class/educogroup.class.php');
+include_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
+dol_include_once('/educo/class/educogroupstudent.class.php');
 dol_include_once('/educo/class/html.formeduco.class.php');
+dol_include_once('/educo/class/educostudent.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
-
 // Load traductions files requiredby by page
 $langs->load("educo");
 $langs->load("other");
-
-$academicid = GETPOST('academicid', 'int');
-$teacherid = GETPOST('teacherid', 'int');
-$groupid= GETPOST('groupid', 'int');
-$group=new Educogroup($db);
-$group->fetch($groupid);
-$subjects = fetchSubjectsPesum($academicid, $group->grado_code,$teacherid);
-print json_encode($subjects);
+$find= GETPOST('find','alpha');
+$student = new Educostudent($db);
+$student->fetchAll($sortorder, 'name', $conf->liste_limit, 0, array('ref'=>$find,
+        'firstname'=>$find,'lastname'=>$find), 'OR');
+    die(json_encode($student->lines));

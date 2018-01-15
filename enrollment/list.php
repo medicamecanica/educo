@@ -20,10 +20,10 @@
  */
 
 /**
- *   	\file       educo/educostudent_list.php
+ *   	\file       educo/educogroupstudent_list.php
  * 		\ingroup    educo
  * 		\brief      This file is an example of a php page
- * 					Initialy built by build_class_from_table on 2017-12-15 14:20
+ * 					Initialy built by build_class_from_table on 2018-01-13 12:09
  */
 //if (! defined('NOREQUIREUSER'))  define('NOREQUIREUSER','1');
 //if (! defined('NOREQUIREDB'))    define('NOREQUIREDB','1');
@@ -52,7 +52,10 @@ if (!$res)
 require_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
-dol_include_once('/educo/class/educostudent.class.php');
+dol_include_once('/educo/class/educogroupstudent.class.php');
+dol_include_once('/educo/class/html.formeduco.class.php');
+dol_include_once('/educo/lib/educo.lib.php');
+
 
 // Load traductions files requiredby by page
 $langs->load("educo");
@@ -71,16 +74,12 @@ $myparam = GETPOST('myparam', 'alpha');
 $search_all = trim(GETPOST("sall"));
 
 $search_ref = GETPOST('search_ref', 'alpha');
-$search_name = GETPOST('search_name', 'alpha');
-$search_firstname = GETPOST('search_firstname', 'alpha');
-$search_lastname = GETPOST('search_lastname', 'alpha');
-$search_doc_type = GETPOST('search_doc_type', 'alpha');
-$search_document = GETPOST('search_document', 'alpha');
+$search_statut = GETPOST('search_statut', 'int');
+$search_fk_grupo = GETPOST('search_fk_grupo', 'int');
+$search_fk_estudiante = GETPOST('search_fk_estudiante', 'int');
+$search_fk_user = GETPOST('search_fk_user', 'int');
+$search_fk_academicyear = GETPOST('search_fk_academicyear', 'int');
 $search_entity = GETPOST('search_entity', 'int');
-$search_fk_contact = GETPOST('search_fk_contact', 'int');
-$search_fk_soc = GETPOST('search_fk_soc', 'int');
-$search_status = GETPOST('search_status', 'int');
-$search_import_key = GETPOST('search_import_key', 'alpha');
 
 
 $search_myfield = GETPOST('search_myfield');
@@ -131,16 +130,12 @@ if (empty($user->socid))
 // Definition of fields for list
 $arrayfields = array(
     't.ref' => array('label' => $langs->trans("Fieldref"), 'checked' => 1),
-    't.name' => array('label' => $langs->trans("Fieldname"), 'checked' => 1),
-//'t.firstname'=>array('label'=>$langs->trans("Fieldfirstname"), 'checked'=>1),
-//'t.lastname'=>array('label'=>$langs->trans("Fieldlastname"), 'checked'=>1),
-    't.doc_type' => array('label' => $langs->trans("Fielddoc_type"), 'checked' => 1),
-    't.document' => array('label' => $langs->trans("Fielddocument"), 'checked' => 1),
+    't.statut' => array('label' => $langs->trans("Fieldstatut"), 'checked' => 1),
+    't.fk_grupo' => array('label' => $langs->trans("Fieldfk_grupo"), 'checked' => 1),
+    't.fk_estudiante' => array('label' => $langs->trans("Fieldfk_estudiante"), 'checked' => 1),
+    't.fk_user' => array('label' => $langs->trans("Fieldfk_user"), 'checked' => 1),
+    't.fk_academicyear' => array('label' => $langs->trans("Fieldfk_academicyear"), 'checked' => 1),
 //'t.entity'=>array('label'=>$langs->trans("Fieldentity"), 'checked'=>1),
-    't.fk_contact' => array('label' => $langs->trans("Fieldfk_contact"), 'checked' => 0),
-    't.fk_soc' => array('label' => $langs->trans("Fieldfk_soc"), 'checked' => 0),
-    't.status' => array('label' => $langs->trans("Fieldstatus"), 'checked' => 1),
-//'t.import_key'=>array('label'=>$langs->trans("Fieldimport_key"), 'checked'=>1),
     //'t.entity'=>array('label'=>$langs->trans("Entity"), 'checked'=>1, 'enabled'=>(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode))),
     't.datec' => array('label' => $langs->trans("DateCreationShort"), 'checked' => 0, 'position' => 500),
     't.tms' => array('label' => $langs->trans("DateModificationShort"), 'checked' => 0, 'position' => 500),
@@ -155,7 +150,7 @@ if (is_array($extrafields->attribute_label) && count($extrafields->attribute_lab
 
 
 // Load object if id or ref is provided as parameter
-$object = new Educostudent($db);
+$object = new Educogroupstudent($db);
 if (($id > 0 || !empty($ref)) && $action != 'add') {
     $result = $object->fetch($id, $ref);
     if ($result < 0)
@@ -190,17 +185,14 @@ if (empty($reshook)) {
 
     // Purge search criteria
     if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter.x") || GETPOST("button_removefilter")) { // All tests are required to be compatible with all browsers
+
         $search_ref = '';
-        $search_name = '';
-        $search_firstname = '';
-        $search_lastname = '';
-        $search_doc_type = '';
-        $search_document = '';
+        $search_statut = '';
+        $search_fk_grupo = '';
+        $search_fk_estudiante = '';
+        $search_fk_user = '';
+        $search_fk_academicyear = '';
         $search_entity = '';
-        $search_fk_contact = '';
-        $search_fk_soc = '';
-        $search_status = '';
-        $search_import_key = '';
 
 
         $search_date_creation = '';
@@ -229,10 +221,10 @@ if (empty($reshook)) {
 $now = dol_now();
 
 $form = new Form($db);
-
+$formEduco = new FormEduco($db);
 //$help_url="EN:Module_Customers_Orders|FR:Module_Commandes_Clients|ES:Módulo_Pedidos_de_clientes";
 $help_url = '';
-$title = $langs->trans('StudentListTitle');
+$title = $langs->trans('EnrollmentListTitle');
 
 // Put here content of your page
 // Example : Adding jquery code
@@ -255,19 +247,18 @@ $sql = "SELECT";
 $sql .= " t.rowid,";
 
 $sql .= " t.ref,";
-$sql .= " t.name,";
-$sql .= " t.firstname,";
-$sql .= " t.lastname,";
-$sql .= " t.doc_type,";
-$sql .= " t.document,";
-$sql .= " t.entity,";
-$sql .= " t.fk_contact,";
-$sql .= " t.date_create,";
-$sql .= " t.fk_soc,";
+$sql .= " t.datec,";
 $sql .= " t.tms,";
-$sql .= " t.status,";
-$sql .= " t.photo,";
-$sql .= " t.import_key";
+$sql .= " t.statut,";
+$sql .= " t.fk_grupo,";
+$sql .= " t.fk_estudiante,";
+$sql .= " t.fk_user,";
+$sql .= " t.fk_academicyear,";
+$sql .= " t.entity,";
+$sql .= " concat(u.firstname,' ' ,u.lastname) as user_name,";
+$sql .= " a.ref as academic_ref,";
+$sql .= " g.label as group_name,";
+$sql .= " s.name as student_name";
 
 
 // Add fields from extrafields
@@ -277,34 +268,30 @@ foreach ($extrafields->attribute_label as $key => $val)
 $parameters = array();
 $reshook = $hookmanager->executeHooks('printFieldListSelect', $parameters);    // Note that $action and $object may have been modified by hook
 $sql .= $hookmanager->resPrint;
-$sql .= " FROM " . MAIN_DB_PREFIX . "educo_student as t";
+$sql .= " FROM " . MAIN_DB_PREFIX . "educo_group_student as t";
+$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "educo_acad_year a ON a.rowid=t.fk_academicyear";
+$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "user u ON u.rowid=t.fk_user";
+$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "educo_group g ON g.rowid=t.fk_grupo";
+$sql .= " INNER JOIN " . MAIN_DB_PREFIX . "educo_student s ON s.rowid=t.fk_estudiante";
 if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
-    $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "educo_student_extrafields as ef on (t.rowid = ef.fk_object)";
+    $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "educo_group_student_extrafields as ef on (t.rowid = ef.fk_object)";
 $sql .= " WHERE 1 = 1";
 //$sql.= " WHERE u.entity IN (".getEntity('mytable',1).")";
 
 if ($search_ref)
     $sql .= natural_search("ref", $search_ref);
-if ($search_name)
-    $sql .= natural_search("name", $search_name);
-if ($search_firstname)
-    $sql .= natural_search("firstname", $search_firstname);
-if ($search_lastname)
-    $sql .= natural_search("lastname", $search_lastname);
-if ($search_doc_type)
-    $sql .= natural_search("doc_type", $search_doc_type);
-if ($search_document)
-    $sql .= natural_search("document", $search_document);
+if ($search_statut)
+    $sql .= natural_search("statut", $search_statut);
+if ($search_fk_grupo)
+    $sql .= natural_search("fk_grupo", $search_fk_grupo);
+if ($search_fk_estudiante)
+    $sql .= natural_search("fk_estudiante", $search_fk_estudiante);
+if ($search_fk_user)
+    $sql .= natural_search("fk_user", $search_fk_user);
+if ($search_fk_academicyear)
+    $sql .= natural_search("fk_academicyear", $search_fk_academicyear);
 if ($search_entity)
     $sql .= natural_search("entity", $search_entity);
-if ($search_fk_contact)
-    $sql .= natural_search("fk_contact", $search_fk_contact);
-if ($search_fk_soc)
-    $sql .= natural_search("fk_soc", $search_fk_soc);
-if ($search_status)
-    $sql .= natural_search("status", $search_status);
-if ($search_import_key)
-    $sql .= natural_search("import_key", $search_import_key);
 
 
 if ($sall)
@@ -349,7 +336,7 @@ $num = $db->num_rows($resql);
 if ($num == 1 && !empty($conf->global->MAIN_SEARCH_DIRECT_OPEN_IF_ONLY_ONE) && $search_all) {
     $obj = $db->fetch_object($resql);
     $id = $obj->rowid;
-    header("Location: " . DOL_URL_ROOT . '/educostudent/card.php?id=' . $id);
+    header("Location: " . DOL_URL_ROOT . '/educogroupstudent/card.php?id=' . $id);
     exit;
 }
 
@@ -433,26 +420,18 @@ print '<tr class="liste_titre">';
 // 
 if (!empty($arrayfields['t.ref']['checked']))
     print_liste_field_titre($arrayfields['t.ref']['label'], $_SERVER['PHP_SELF'], 't.ref', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.name']['checked']))
-    print_liste_field_titre($arrayfields['t.name']['label'], $_SERVER['PHP_SELF'], 't.name', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.firstname']['checked']))
-    print_liste_field_titre($arrayfields['t.firstname']['label'], $_SERVER['PHP_SELF'], 't.firstname', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.lastname']['checked']))
-    print_liste_field_titre($arrayfields['t.lastname']['label'], $_SERVER['PHP_SELF'], 't.lastname', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.doc_type']['checked']))
-    print_liste_field_titre($arrayfields['t.doc_type']['label'], $_SERVER['PHP_SELF'], 't.doc_type', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.document']['checked']))
-    print_liste_field_titre($arrayfields['t.document']['label'], $_SERVER['PHP_SELF'], 't.document', '', $params, '', $sortfield, $sortorder);
+if (!empty($arrayfields['t.statut']['checked']))
+    print_liste_field_titre($arrayfields['t.statut']['label'], $_SERVER['PHP_SELF'], 't.statut', '', $params, '', $sortfield, $sortorder);
+if (!empty($arrayfields['t.fk_grupo']['checked']))
+    print_liste_field_titre($arrayfields['t.fk_grupo']['label'], $_SERVER['PHP_SELF'], 't.fk_grupo', '', $params, '', $sortfield, $sortorder);
+if (!empty($arrayfields['t.fk_estudiante']['checked']))
+    print_liste_field_titre($arrayfields['t.fk_estudiante']['label'], $_SERVER['PHP_SELF'], 't.fk_estudiante', '', $params, '', $sortfield, $sortorder);
+if (!empty($arrayfields['t.fk_user']['checked']))
+    print_liste_field_titre($arrayfields['t.fk_user']['label'], $_SERVER['PHP_SELF'], 't.fk_user', '', $params, '', $sortfield, $sortorder);
+if (!empty($arrayfields['t.fk_academicyear']['checked']))
+    print_liste_field_titre($arrayfields['t.fk_academicyear']['label'], $_SERVER['PHP_SELF'], 't.fk_academicyear', '', $params, '', $sortfield, $sortorder);
 if (!empty($arrayfields['t.entity']['checked']))
     print_liste_field_titre($arrayfields['t.entity']['label'], $_SERVER['PHP_SELF'], 't.entity', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.fk_contact']['checked']))
-    print_liste_field_titre($arrayfields['t.fk_contact']['label'], $_SERVER['PHP_SELF'], 't.fk_contact', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.fk_soc']['checked']))
-    print_liste_field_titre($arrayfields['t.fk_soc']['label'], $_SERVER['PHP_SELF'], 't.fk_soc', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.status']['checked']))
-    print_liste_field_titre($arrayfields['t.status']['label'], $_SERVER['PHP_SELF'], 't.status', '', $params, '', $sortfield, $sortorder);
-if (!empty($arrayfields['t.import_key']['checked']))
-    print_liste_field_titre($arrayfields['t.import_key']['label'], $_SERVER['PHP_SELF'], 't.import_key', '', $params, '', $sortfield, $sortorder);
 
 //if (! empty($arrayfields['t.field1']['checked'])) print_liste_field_titre($arrayfields['t.field1']['label'],$_SERVER['PHP_SELF'],'t.field1','',$param,'',$sortfield,$sortorder);
 //if (! empty($arrayfields['t.field2']['checked'])) print_liste_field_titre($arrayfields['t.field2']['label'],$_SERVER['PHP_SELF'],'t.field2','',$param,'',$sortfield,$sortorder);
@@ -482,26 +461,18 @@ print '<tr class="liste_titre">';
 // 
 if (!empty($arrayfields['t.ref']['checked']))
     print '<td class="liste_titre"><input type="text" class="flat" name="search_ref" value="' . $search_ref . '" size="10"></td>';
-if (!empty($arrayfields['t.name']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_name" value="' . $search_name . '" size="10"></td>';
-if (!empty($arrayfields['t.firstname']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_firstname" value="' . $search_firstname . '" size="10"></td>';
-if (!empty($arrayfields['t.lastname']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_lastname" value="' . $search_lastname . '" size="10"></td>';
-if (!empty($arrayfields['t.doc_type']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_doc_type" value="' . $search_doc_type . '" size="10"></td>';
-if (!empty($arrayfields['t.document']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_document" value="' . $search_document . '" size="10"></td>';
+if (!empty($arrayfields['t.statut']['checked']))
+    print '<td class="liste_titre"><input type="text" class="flat" name="search_statut" value="' . $search_statut . '" size="10"></td>';
+if (!empty($arrayfields['t.fk_grupo']['checked']))
+    print '<td class="liste_titre"><input type="text" class="flat" name="search_fk_grupo" value="' . $search_fk_grupo . '" size="10"></td>';
+if (!empty($arrayfields['t.fk_estudiante']['checked']))
+    print '<td class="liste_titre"><input type="text" class="flat" name="search_fk_estudiante" value="' . $search_fk_estudiante . '" size="10"></td>';
+if (!empty($arrayfields['t.fk_user']['checked']))
+    print '<td class="liste_titre"><input type="text" class="flat" name="search_fk_user" value="' . $search_fk_user . '" size="10"></td>';
+if (!empty($arrayfields['t.fk_academicyear']['checked']))
+    print '<td class="liste_titre"><input type="text" class="flat" name="search_fk_academicyear" value="' . $search_fk_academicyear . '" size="10"></td>';
 if (!empty($arrayfields['t.entity']['checked']))
     print '<td class="liste_titre"><input type="text" class="flat" name="search_entity" value="' . $search_entity . '" size="10"></td>';
-if (!empty($arrayfields['t.fk_contact']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_fk_contact" value="' . $search_fk_contact . '" size="10"></td>';
-if (!empty($arrayfields['t.fk_soc']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_fk_soc" value="' . $search_fk_soc . '" size="10"></td>';
-if (!empty($arrayfields['t.status']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_status" value="' . $search_status . '" size="10"></td>';
-if (!empty($arrayfields['t.import_key']['checked']))
-    print '<td class="liste_titre"><input type="text" class="flat" name="search_import_key" value="' . $search_import_key . '" size="10"></td>';
 
 //if (! empty($arrayfields['t.field1']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_field1" value="'.$search_field1.'" size="10"></td>';
 //if (! empty($arrayfields['t.field2']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_field2" value="'.$search_field2.'" size="10"></td>';
@@ -569,22 +540,21 @@ while ($i < min($num, $limit)) {
         foreach ($arrayfields as $key => $value) {
             if (!empty($arrayfields[$key]['checked'])) {
                 $key2 = str_replace('t.', '', $key);
-                //var_dump($key);
-                $object->ref = $obj->ref;
-                $object->id = $obj->rowid;
-                $object->status = $obj->status;
-                $object->firstname = $obj->firstname;
-                $object->lastname = $obj->lastname;
-                $object->photo = $obj->photo;
-               
                 switch ($key) {
                     case 't.ref':
+                        $object->ref=$obj->ref;
+                        $object->id=$obj->rowid;
                         print '<td>' . $object->getNomUrl(1) . '</td>';
                         break;
-                    case 't.status':
-                        print '<td>' . $object->getLibStatut(2) . '</td>';
+                    case 't.fk_user':print '<td>' . $obj->user_name . '</td>';
                         break;
-                    default: print '<td>' . $obj->$key2 . '</td>';
+                    case 't.fk_academicyear':print '<td>' . $obj->academic_ref . '</td>';
+                        break;
+                    case 't.fk_grupo':print '<td>' . $obj->group_name . '</td>';
+                        break;
+                    case 't.fk_estudiante':print '<td>' . $obj->student_name . '</td>';
+                        break;
+                    default :print '<td>' . $obj->$key2 . '</td>';
                 }
                 if (!$i)
                     $totalarray['nbfield'] ++;

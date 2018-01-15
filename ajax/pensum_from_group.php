@@ -1,6 +1,6 @@
 <?php
 
-/*
+/* 
  * Copyright (C) 2018 ander
  *
  * This program is free software: you can redistribute it and/or modify
@@ -46,5 +46,7 @@ $teacherid = GETPOST('teacherid', 'int');
 $groupid= GETPOST('groupid', 'int');
 $group=new Educogroup($db);
 $group->fetch($groupid);
-$subjects = fetchSubjectsPesum($academicid, $group->grado_code,$teacherid);
+$subjects = fetchSubjectsPesum($academicid, $group->grado_code,$groupid);
+//print $group->db->lastquery;
+
 print json_encode($subjects);
