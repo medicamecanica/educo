@@ -266,10 +266,10 @@ if ($action == 'create') {
     print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
     // 
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddatestart") . '</td>'
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_start") . '</td>'
             . '<td>';
     print $form->select_date($object->datestart, 'datestart') . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddatestart") . '</td>'
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_end") . '</td>'
             . '<td>';
     print $form->select_date($object->dateend, 'dateend') . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_private") . '</td><td>';
@@ -305,10 +305,10 @@ if (($id || $ref) && $action == 'edit') {
     dol_fiche_head($head, 'card', $langs->trans("AcademicYear"), 0, 'generic');
 
     print '<table class="border centpercent">' . "\n";
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddatestart") . '</td>'
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_start") . '</td>'
             . '<td>';
     print $form->select_date($object->datestart, 'datestart') . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddatestart") . '</td>'
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_end") . '</td>'
             . '<td>';
     print $form->select_date($object->dateend, 'dateend') . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_private") . '</td><td>';
@@ -355,9 +355,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td>'.$object->label.'</td></tr>';
     // 
     print '<tr><td class="fieldrequired" class="nowrap">' . $langs->trans("Fieldref") . '</td><td>' . $object->ref . '</td></tr>';
-     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_datestart") . '</td>'
+     print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_start") . '</td>'
              . '<td>' .dol_print_date($object->datestart) . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_dateend") . '</td>'
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_end") . '</td>'
             . '<td>' .dol_print_date($object->dateend ). '</td></tr>';
     
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_private") . '</td><td>' . $object->note_private . '</td></tr>';

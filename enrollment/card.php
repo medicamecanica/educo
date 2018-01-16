@@ -127,7 +127,7 @@ if (empty($reshook)) {
 
         if ($id > 0 || !empty($ref))
             $ret = $object->fetch($id, $ref);
-      
+
 
         $action = '';
     }
@@ -164,7 +164,7 @@ if (empty($reshook)) {
 
         if (!$error) {
             $result = $object->create($user);
-            print $object->db->lastquery;
+            //  print $object->db->lastquery;
             if ($result > 0) {
                 // Creation OK
                 $urltogo = $backtopage ? $backtopage : dol_buildpath('/educo/enrollment/list.php', 1);
@@ -172,9 +172,15 @@ if (empty($reshook)) {
                 exit;
             } {
                 // Creation KO
-                if (!empty($object->errors))
-                    setEventMessages(null, $object->errors, 'errors');
-                else
+
+
+
+                if (!empty($object->errors)) {
+                    if (strpos(end($object->errors), 'academicyear_by_student') !== false)
+                        setEventMessages($langs->trans('StudenAllReadyEnrrolementInThisYear'), null, 'errors');
+                    else
+                        setEventMessages(null, $object->errors, 'errors');
+                } else
                     setEventMessages($object->error, null, 'errors');
                 $action = 'create';
             }
@@ -349,12 +355,12 @@ if (($id || $ref) && $action == 'edit') {
 if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'create'))) {
     $res = $object->fetch_optionals($object->id, $extralabels);
 
-  if ($ret > 0)
-            $ret = $student->fetch($object->fk_estudiante);
-        if ($ret > 0)
-            $ret = $group->fetch($object->fk_grupo);
-        if ($ret > 0)
-            $ret = $enrollman->fetch($object->fk_user);
+    if ($ret > 0)
+        $ret = $student->fetch($object->fk_estudiante);
+    if ($ret > 0)
+        $ret = $group->fetch($object->fk_grupo);
+    if ($ret > 0)
+        $ret = $enrollman->fetch($object->fk_user);
     print load_fiche_titre($langs->trans("Enrollment"));
 
     dol_fiche_head();
@@ -373,7 +379,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_estudiante") . '</td><td>' . $student->getNomUrl(1) . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_user") . '</td><td>' . $enrollman->getNomUrl(1) . '</td></tr>';
 //    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_academicyear") . '</td><td>' . $academicid->getNomUrl(1) . '</td></tr>';
-  //  print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td>' . $object->entity . '</td></tr>';
+    //  print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td>' . $object->entity . '</td></tr>';
 
     print '</table>';
 

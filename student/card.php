@@ -269,12 +269,12 @@ if (empty($reshook)) {
                     setEventMessages(null, $object->errors, 'errors');
                 else
                     setEventMessages($object->error, null, 'errors');
-                setEventMessages($object->db->lastquery, null, 'errors');
+               // setEventMessages($object->db->lastquery, null, 'errors');
                 $action = 'create';
             }
         }
         else {
-            setEventMessages($object->db->lastquery, null, 'errors');
+            //setEventMessages($object->db->lastquery, null, 'errors');
             $object->db->rollback();
             setEventMessages(null, $object->errors, 'errors');
             $action = 'create';

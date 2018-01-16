@@ -65,6 +65,7 @@ class Educogroupstudent extends CommonObject
 	public $fk_estudiante;
 	public $fk_user;
 	public $fk_academicyear;
+        //public $grado_code;
 	public $entity;
 
 	/**
@@ -121,6 +122,9 @@ class Educogroupstudent extends CommonObject
 		if (isset($this->fk_academicyear)) {
 			 $this->fk_academicyear = trim($this->fk_academicyear);
 		}
+//                if (isset($this->grado_code)) {
+//			 $this->grado_code = trim($this->grado_code);
+//		}
 		if (isset($this->entity)) {
 			 $this->entity = trim($this->entity);
 		}
@@ -140,6 +144,7 @@ class Educogroupstudent extends CommonObject
 		$sql.= 'fk_estudiante,';
 		$sql.= 'fk_user,';
 		$sql.= 'fk_academicyear,';
+                //$sql.= 'grado_code,';
 		$sql.= 'entity';
 
 		
@@ -152,6 +157,7 @@ class Educogroupstudent extends CommonObject
 		$sql .= ' '.(! isset($this->fk_estudiante)?'NULL':$this->fk_estudiante).',';
 		$sql .= ' '.(! isset($this->fk_user)?'NULL':$this->fk_user).',';
 		$sql .= ' '.(! isset($this->fk_academicyear)?'NULL':$this->fk_academicyear).',';
+               // $sql .= ' '.(! isset($this->grado_code)?'NULL':$this->grado_code).',';
 		$sql .= ' '.(! isset($this->entity)?'NULL':$this->entity);
 
 		

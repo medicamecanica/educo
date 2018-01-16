@@ -53,9 +53,9 @@ print '<table class="border" width="100%">';
 print '<tr><td><label for="civility_id">' . $langs->trans("UserTitle") . '</label></td><td colspan="3">';
 print $formcompany->select_civility(GETPOST("civility_id", 'alpha') ? GETPOST("civility_id", 'alpha') : $contact->civility_id);
 print '</td></tr>';
-
-print '<tr><td><label for="title">' . $langs->trans("PostOrFunction") . '</label></td>';
-print '<td colspan="3"><input name="poste" id="title" type="text" class="minwidth100" maxlength="80" value="' . dol_escape_htmltag(GETPOST("poste", 'alpha') ? GETPOST("poste", 'alpha') : $contact->poste) . '"></td>';
+//
+//print '<tr><td><label for="title">' . $langs->trans("PostOrFunction") . '</label></td>';
+//print '<td colspan="3"><input name="poste" id="title" type="text" class="minwidth100" maxlength="80" value="' . dol_escape_htmltag(GETPOST("poste", 'alpha') ? GETPOST("poste", 'alpha') : $contact->poste) . '"></td>';
 
 $colspan = 3;
 if ($conf->use_javascript_ajax && $socid > 0)
@@ -110,17 +110,17 @@ if (empty($conf->global->SOCIETE_DISABLE_STATE)) {
 // Phone / Fax
 if (($objsoc->typent_code == 'TE_PRIVATE' || !empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($contact->phone_pro)) == 0)
     $contact->phone_pro = $objsoc->phone; // Predefined with third party
-print '<tr><td><label for="phone_pro">' . $langs->trans("PhonePro") . '</label></td>';
+print '<tr>';/*<td><label for="phone_pro">' . $langs->trans("PhonePro") . '</label></td>';
 print '<td><input name="phone_pro" id="phone_pro" type="text" class="maxwidth100onsmartphone" maxlength="80" value="' . dol_escape_htmltag(GETPOST("phone_pro") ? GETPOST("phone_pro") : $contact->phone_pro) . '"></td>';
-print '<td><label for="phone_perso">' . $langs->trans("PhonePerso") . '</label></td>';
+*/print '<td><label for="phone_perso">' . $langs->trans("PhonePerso") . '</label></td>';
 print '<td><input name="phone_perso" id="phone_perso" type="text" class="maxwidth100onsmartphone" maxlength="80" value="' . dol_escape_htmltag(GETPOST("phone_perso") ? GETPOST("phone_perso") : $contact->phone_perso) . '"></td></tr>';
 
 if (($objsoc->typent_code == 'TE_PRIVATE' || !empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($contact->fax)) == 0)
     $contact->fax = $objsoc->fax; // Predefined with third party
 print '<tr><td><label for="phone_mobile">' . $langs->trans("PhoneMobile") . '</label></td>';
 print '<td><input name="phone_mobile" id="phone_mobile" type="text" class="maxwidth100onsmartphone" maxlength="80" value="' . dol_escape_htmltag(GETPOST("phone_mobile") ? GETPOST("phone_mobile") : $contact->phone_mobile) . '"></td>';
-print '<td><label for="fax">' . $langs->trans("Fax") . '</label></td>';
-print '<td><input name="fax" id="fax" type="text" class="maxwidth100onsmartphone" maxlength="80" value="' . dol_escape_htmltag(GETPOST("fax", 'alpha') ? GETPOST("fax", 'alpha') : $contact->fax) . '"></td></tr>';
+//print '<td><label for="fax">' . $langs->trans("Fax") . '</label></td>';
+//print '<td><input name="fax" id="fax" type="text" class="maxwidth100onsmartphone" maxlength="80" value="' . dol_escape_htmltag(GETPOST("fax", 'alpha') ? GETPOST("fax", 'alpha') : $contact->fax) . '"></td></tr>';
 
 // EMail
 if (($objsoc->typent_code == 'TE_PRIVATE' || !empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($contact->email)) == 0)
@@ -136,8 +136,8 @@ if (!empty($conf->mailing->enabled)) {
 print '</tr>';
 
 // Instant message and no email
-print '<tr><td><label for="jabberid">' . $langs->trans("IM") . '</label></td>';
-print '<td colspan="3"><input name="jabberid" id="jabberid" type="text" class="minwidth100" maxlength="80" value="' . (GETPOST("jabberid", 'alpha') ? GETPOST("jabberid", 'alpha') : $contact->jabberid) . '"></td></tr>';
+//print '<tr><td><label for="jabberid">' . $langs->trans("IM") . '</label></td>';
+//print '<td colspan="3"><input name="jabberid" id="jabberid" type="text" class="minwidth100" maxlength="80" value="' . (GETPOST("jabberid", 'alpha') ? GETPOST("jabberid", 'alpha') : $contact->jabberid) . '"></td></tr>';
 
 // Skype
 if (!empty($conf->skype->enabled)) {

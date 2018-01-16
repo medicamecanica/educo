@@ -117,8 +117,8 @@ if (empty($user->socid)) $fieldstosearchall["t.note_private"]="NotePrivate";
 $arrayfields=array(
     
 't.ref'=>array('label'=>$langs->trans("Fieldref"), 'checked'=>1),
-'t.note_private'=>array('label'=>$langs->trans("Fieldnote_private"), 'checked'=>1),
-'t.note_public'=>array('label'=>$langs->trans("Fieldnote_public"), 'checked'=>1),
+'t.note_private'=>array('label'=>$langs->trans("Fieldnote_private"), 'checked'=>0),
+'t.note_public'=>array('label'=>$langs->trans("Fieldnote_public"), 'checked'=>0),
 't.status'=>array('label'=>$langs->trans("Fieldstatus"), 'checked'=>1),
 
     
@@ -484,10 +484,15 @@ while ($i < min($num, $limit))
         	if (!empty($arrayfields[$key]['checked'])) {
                 	$key2 = str_replace('t.', '', $key);
                         $html='';
-                        switch ($key2):
-                            case 'ref': $object->ref=$obj->ref;
+                        $object->ref=$obj->ref;
                                  $object->id=$obj->rowid;
+                                  $object->status=$obj->status;
+                        switch ($key2):
+                            case 'ref':
                                 $html=$object->getNomUrl(1);
+                                break;
+                            case 'status': 
+                                $html=$object->getLibStatut(2);
                                 break;
                             default :$html=$obj->$key2;
                         endswitch;

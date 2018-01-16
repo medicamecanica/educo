@@ -367,8 +367,8 @@ if (empty($conf->global->SOCIETE_DISABLE_STATE)) {
 // Email web
 print '<tr><td>' . fieldLabel('EMail', 'email') . (!empty($conf->global->SOCIETE_MAIL_REQUIRED) ? '*' : '') . '</td>';
 print '<td colspan="3"><input type="text" name="socemail" id="email" value="' . $soc->email . '"></td></tr>';
-print '<tr><td>' . fieldLabel('Web', 'url') . '</td>';
-print '<td colspan="3"><input type="text" name="socurl" id="url" value="' . $soc->url . '"></td></tr>';
+//print '<tr><td>' . fieldLabel('Web', 'url') . '</td>';
+//print '<td colspan="3"><input type="text" name="socurl" id="url" value="' . $soc->url . '"></td></tr>';
 
 // Skype
 if (!empty($conf->skype->enabled)) {
@@ -379,8 +379,8 @@ if (!empty($conf->skype->enabled)) {
 // Phone / Fax
 print '<tr><td>' . fieldLabel('Phone', 'phone') . '</td>';
 print '<td><input type="text" name="socphone" id="phone" class="maxwidth100onsmartphone quatrevingtpercent" value="' . $soc->phone . '"></td>';
-print '<td>' . fieldLabel('Fax', 'fax') . '</td>';
-print '<td><input type="text" name="socfax" id="fax" class="maxwidth100onsmartphone quatrevingtpercent" value="' . $soc->fax . '"></td></tr>';
+print '<td>' ./* fieldLabel('Fax', 'fax') .*/ '</td>';
+print '<td>'./*<input type="text" name="socfax" id="fax" class="maxwidth100onsmartphone quatrevingtpercent" value="' . $soc->fax . '">*/'</td></tr>';
 
 // Prof ids
 $i = 2;
@@ -406,36 +406,36 @@ while ($i <= 2) {
 }
 if ($j % 2 == 1)
     print '<td colspan="2"></td></tr>';
-
-// Vat is used
-print '<tr><td>' . fieldLabel('VATIsUsed', 'assujtva_value') . '</td>';
-print '<td>';
-print $form->selectyesno('assujtva_value', (isset($conf->global->THIRDPARTY_DEFAULT_USEVAT) ? $conf->global->THIRDPARTY_DEFAULT_USEVAT : 1), 1);     // Assujeti par defaut en creation
-print '</td>';
-print '<td class="nowrap">' . fieldLabel('VATIntra', 'intra_vat') . '</td>';
-print '<td class="nowrap">';
-$s = '<input type="text" class="flat maxwidthonsmartphone" name="soctva_intra" id="intra_vat" maxlength="20" value="' . $soc->tva_intra . '">';
-
-if (empty($conf->global->MAIN_DISABLEVATCHECK)) {
-    $s .= ' ';
-
-    if (!empty($conf->use_javascript_ajax)) {
-        print "\n";
-        print '<script language="JavaScript" type="text/javascript">';
-        print "function CheckVAT(a) {\n";
-        print "newpopup('" . DOL_URL_ROOT . "/societe/checkvat/checkVatPopup.php?vatNumber='+a,'" . dol_escape_js($langs->trans("VATIntraCheckableOnEUSite")) . "',500,300);\n";
-        print "}\n";
-        print '</script>';
-        print "\n";
-        $s .= '<a href="#" class="hideonsmartphone" onclick="javascript: CheckVAT(document.formsoc.tva_intra.value);">' . $langs->trans("VATIntraCheck") . '</a>';
-        $s = $form->textwithpicto($s, $langs->trans("VATIntraCheckDesc", $langs->trans("VATIntraCheck")), 1);
-    } else {
-        $s .= '<a href="' . $langs->transcountry("VATIntraCheckURL", $soc->country_id) . '" target="_blank">' . img_picto($langs->trans("VATIntraCheckableOnEUSite"), 'help') . '</a>';
-    }
-}
-print $s;
-print '</td>';
-print '</tr>';
+//
+//// Vat is used
+//print '<tr><td>' . fieldLabel('VATIsUsed', 'assujtva_value') . '</td>';
+//print '<td>';
+//print $form->selectyesno('assujtva_value', (isset($conf->global->THIRDPARTY_DEFAULT_USEVAT) ? $conf->global->THIRDPARTY_DEFAULT_USEVAT : 1), 1);     // Assujeti par defaut en creation
+//print '</td>';
+//print '<td class="nowrap">' . fieldLabel('VATIntra', 'intra_vat') . '</td>';
+//print '<td class="nowrap">';
+//$s = '<input type="text" class="flat maxwidthonsmartphone" name="soctva_intra" id="intra_vat" maxlength="20" value="' . $soc->tva_intra . '">';
+//
+//if (empty($conf->global->MAIN_DISABLEVATCHECK)) {
+//    $s .= ' ';
+//
+//    if (!empty($conf->use_javascript_ajax)) {
+//        print "\n";
+//        print '<script language="JavaScript" type="text/javascript">';
+//        print "function CheckVAT(a) {\n";
+//        print "newpopup('" . DOL_URL_ROOT . "/societe/checkvat/checkVatPopup.php?vatNumber='+a,'" . dol_escape_js($langs->trans("VATIntraCheckableOnEUSite")) . "',500,300);\n";
+//        print "}\n";
+//        print '</script>';
+//        print "\n";
+//        $s .= '<a href="#" class="hideonsmartphone" onclick="javascript: CheckVAT(document.formsoc.tva_intra.value);">' . $langs->trans("VATIntraCheck") . '</a>';
+//        $s = $form->textwithpicto($s, $langs->trans("VATIntraCheckDesc", $langs->trans("VATIntraCheck")), 1);
+//    } else {
+//        $s .= '<a href="' . $langs->transcountry("VATIntraCheckURL", $soc->country_id) . '" target="_blank">' . img_picto($langs->trans("VATIntraCheckableOnEUSite"), 'help') . '</a>';
+//    }
+//}
+//print $s;
+//print '</td>';
+//print '</tr>';
 
 // Local Taxes
 //TODO: Place into a function to control showing by country or study better option
