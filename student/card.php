@@ -128,7 +128,7 @@ $parameters = array();
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action);    // Note that $action and $object may have been modified by some hooks
 if ($reshook < 0)
     setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-
+$head= student_header($object);
 if (empty($reshook)) {
     if ($cancel) {
         if ($action != 'addlink') {
@@ -458,7 +458,7 @@ if (($id || $ref) && $action == 'edit') {
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
     print '<input type="hidden" name="id" value="' . $object->id . '">';
 
-    dol_fiche_head();
+    dol_fiche_head($head,'card',$langs->trans('Card'));
 
     print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
@@ -512,9 +512,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     $contact->fetch($object->fk_contact);
 
 
-    print load_fiche_titre($langs->trans("Student"));
+   // print load_fiche_titre($langs->trans("Student"));
 
-    dol_fiche_head();
+    dol_fiche_head($head,'card',$langs->trans('Student'),0,'generic');
 
     if ($action == 'delete') {
         $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteStudent'), $langs->trans('ConfirmDeleteStudent'), 'confirm_delete', '', 0, 1);

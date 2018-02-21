@@ -134,7 +134,11 @@ $formeduco = new FormEduco($db);
 $form = new Form($db);
 
 $subjects_grade = fetchSubjectsGrade($academicid, $group->grado_code, $group->id);
+//$asig_grade_codes = array_column(is_array($subjects_grade)?$subjects_grade:array(), 'asignature_code');
+//var_dump("",$grades);
+//$grades = array_column($subjects_grade, 'asignature_code');
 $subjects_teacher = fetchTeacherSubjects($academicid, $teacherid);
+//var_dump($subjects_teacher);
 $css = array(
     'educo/js/fullcalendar/fullcalendar.css',
     'educo/css/scheduler.css'
@@ -145,7 +149,7 @@ $js = array(
     'educo/js/fullcalendar/locale/es.js',
     'educo/js/scheduler.js'
 );
-
+//isprint=GETPOST('optioncss')=='print');
 llxHeader('', 'Scheduler', 'manual', null, 0, 0, $js, $css);
 
 dol_fiche_head($head, 'scheduler', $langs->trans("AcademicYearCard"), 0, 'generic');
@@ -157,28 +161,49 @@ print '<tr><td width="30%">' . $langs->trans("AcademicYear") . '</td><td width="
 $academic->next_prev_filter = "te.fournisseur = 1";
 print $form->showrefnav($academic, 'academicid', '', ($user->societe_id ? 0 : 1), 'rowid', 'ref', '', '');
 print '</td></tr></table>';
+print '<table class="border centpercent">';
 print '<form method="POST" id="form" action="' . $_SERVER["PHP_SELF"] . '">';
 print '<input type="hidden" name="action" value="add">';
 print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
 print '<input type="hidden" name="academicid" value="' . $academicid . '">';
-print 'grupo: ' . $formeduco->select_groups('groupid', $academicid, $groupid, 1) . '<br>';
-print 'docente: ' . $form->select_dolusers(GETPOST('fk_user', 'int'), 'fk_user', 1) . '<br>';
-print '<div class="center">'
+
+print '<tr>';
+print '<td width="10%">' . $langs->trans('Fieldfk_teacher') . '</td>';
+print '<td width="30%"> ';
+print  $form->select_dolusers(GETPOST('fk_user', 'int'), 'fk_user', 1) . '<br>';
+print '</td> ';
+print '<td rowspan="2"> ';
+print '<div class="left">'
         // . '<input type="submit" class="button" id="save" name="save" value="' . $langs->trans("Save") . '"> '
         . '<input type="submit" class="button" name="refresh" value="' . $langs->trans("ToFilter") . '"> '
         . '</div>';
+print '</td> ';
+print '</tr>';
+print '<tr>';
+print '<td>' . $langs->trans('Fieldfk_group') . '</td>';
+print '<td> ';
+print $formeduco->select_groups('groupid', $academicid, $groupid, 1) . '<br>';
+print '</td> ';
+print '</tr>';
+
 $array = array();
+//var_dump(count($subjects_teacher),array_column($subjects_teacher, 'asignature_code'),'<br>');
 if (is_array($subjects_grade)) {
-    foreach (is_array($subjects_teacher) ? $subjects_teacher : array() as $s) {
-        if (count($subjects_grade) > 0)
-            $grades = array_column($subjects_grade, 'grado_code');
-        else
-            $grades = array('');
-        $key = in_array($s->grado_code, $grades) ? $s->rowid . '" disabled="disabled' : $s->rowid;
-        $array[$key] = $s->subject_label;
+    if (count($subjects_grade) > 0)
+        $subject_codes = array_column($subjects_grade, 'asignature_code');
+    else
+        $subject_codes = array('');
+    if (is_array($subjects_teacher)) {
+        foreach ($subjects_teacher as $s) {
+            // var_dump($s->asignature_code,$subject_codes,'<br>');
+            $key = !in_array($s->asignature_code, $subject_codes) ? ($s->rowid . '" disabled="disabled' ) : $s->rowid;
+            $array[$key] = $s->subject_label;
+        }
     }
-}else $array=array(-1=>$langs->trans('SelectAnyGroup'));
-if(count($array)<=0)$array=array(-1=>$langs->trans('SelectAnyTeacher'));
+} else
+    $array = array(-1 => $langs->trans('SelectAnyGroup'));
+if (count($array) <= 0)
+    $array = array(-1 => $langs->trans('SelectAnyTeacher'));
 print '<br>';
 ?>
 <br>
@@ -190,7 +215,7 @@ print '<br>';
         </tr>
     </thead>
     <tbody>
-        <tr class="liste_titre"><td></td><td><?php print $langs->trans('SubjectTeacherAvilable') . $form->selectarray('teachersubjectid', $array, GETPOST('teachersubjectid', 'int'))?></td></tr>
+        <tr class="liste_titre"><td></td><td><?php print $langs->trans('SubjectTeacherAvilable') . $form->selectarray('teachersubjectid', $array, GETPOST('teachersubjectid', 'int')) ?></td></tr>
         <tr>
             <td width="20%" valign="top" halign="right">
                 <div class="box">
@@ -206,7 +231,7 @@ print '<br>';
                                         print '<a class="boxstatsindicator thumbstat nobold nounderline">';
                                         print'<div class="boxstats" title="' . $s->subject_label . '">';
                                         print '<span class="boxstatstext">' . $s->subject_label . '</span><br>';
-                                        print '<span class="boxstatsindicator">' . $s->total_duration . '/' . $s->horas . '</span>';
+                                        print '<span class="boxstatsindicator">' . ($s->total_duration ? $s->total_duration : 0) . '/' . $s->horas . '</span>';
                                         print '<input type="hidden" name="subject_pensum[]" value="">';
                                         print '</div>';
                                         print '</a>';
@@ -235,7 +260,7 @@ print '<div class="center">'
         . '</div>';
 ?>
 </form>
-
+</table>
 <input id='dol_url' type="hidden" value="<?php print DOL_URL_ROOT ?>">
 <input id='academicid' type="hidden" value="<?php print $academicid ?>">
 

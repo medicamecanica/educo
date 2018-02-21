@@ -25,6 +25,7 @@ $(document).ready(function () {
     var teachersubjectid = $('#teachersubjectid').val();
     if (teachersubjectid > 0)
         canAdd = true;
+
     $(document).on('click', '.delete', function () {
 
     });
@@ -40,12 +41,67 @@ $(document).ready(function () {
                 newevents.push(item);
             }
         });
-        var param= $('<input name="events" type="hidden">');
-        var save= $('<input name="save" value="1" type="hidden">');
+        var param = $('<input name="events" type="hidden">');
+        var save = $('<input name="save" value="1" type="hidden">');
         param.attr('value', JSON.stringify(newevents));
         $('#form').append(param).append(save).submit();
 
     });
+    var eventsSources = {
+        groups: {
+            color: 'coral',
+            url: 'events.php',
+            type: 'POST',
+            resourceIds: ['a', 'b'],
+            data: function () { // a function that returns an object
+                return {
+                    academicid: academicid, groupid: $("#groupid").val()
+                };
+            },
+            error: function () {
+                $('#script-warning').show();
+            },
+            success: function () {
+                var view = $('#calendar').fullCalendar('getView');
+            }
+        },
+        teachersbg: {
+            color: 'green',
+            rendering: 'background',
+            url: $('#dol_url').val() + "/educo/ajax/subjects_from_teacher.php",
+            type: 'POST',
+            data: function () { // a function that returns an object
+                return {
+                    academicid: academicid, groupid: $("#groupid").val(),
+                    teacherid: $("#fk_user").val()
+                };
+            },
+            error: function () {
+                $('#script-warning').show();
+            },
+            success: function () {
+                var view = $('#calendar').fullCalendar('getView');
+            }
+        },
+        teachers: {
+            color: 'green',
+            // rendering: 'background',
+            url: $('#dol_url').val() + "/educo/ajax/subjects_from_teacher.php",
+            type: 'POST',
+            data: function () { // a function that returns an object
+                return {
+                    academicid: academicid, groupid: $("#groupid").val(),
+                    teacherid: $("#fk_user").val()
+                };
+            },
+            error: function () {
+                $('#script-warning').show();
+            },
+            success: function () {
+                var view = $('#calendar').fullCalendar('getView');
+            }
+        }
+    };
     $('#calendar').fullCalendar({
         columnFormat: 'dddd',
         defaultDate: '2017-01-01',
@@ -69,43 +125,7 @@ $(document).ready(function () {
         maxTime: '18:00',
         droppable: true, // this allows things to be dropped onto the calendar
         dragRevertDuration: 0,
-        eventSources: [
-            {
-                color: 'coral',
-                url: 'events.php',
-                type: 'POST',
-                resourceIds: ['a', 'b'],
-                data: function () { // a function that returns an object
-                    return {
-                        academicid: academicid, groupid: $("#groupid").val()
-                    };
-                },
-                error: function () {
-                    $('#script-warning').show();
-                },
-                success: function () {
-                    var view = $('#calendar').fullCalendar('getView');
-                }
-            },
-            {
-                color: 'green',
-                rendering: 'background',
-                url: $('#dol_url').val() + "/educo/ajax/subjects_from_teacher.php",
-                type: 'POST',
-                data: function () { // a function that returns an object
-                    return {
-                        academicid: academicid, groupid: $("#groupid").val(),
-                        teacherid: $("#fk_user").val()
-                    };
-                },
-                error: function () {
-                    $('#script-warning').show();
-                },
-                success: function () {
-                    var view = $('#calendar').fullCalendar('getView');
-                }
-            }
-        ]
+        eventSources: [eventsSources.groups, eventsSources.teachersbg]
         ,
         eventDrop: function (event, delta, revertFunc) {
             event.edit = true;
@@ -118,16 +138,25 @@ $(document).ready(function () {
             var title = element.find('.fc-title');
             title.html(event.title);
             element.attr('title', event.tip);
+            // console.log(event.source);
+            // event.rendering = 'inverse-background';
             if (event.id > 0) {
-                var cancel = $('<a  class="delete" style="position:absolute; top:2px; right:2px;"/>');
-                cancel.text('X');
-                cancel.attr('id', event.id);
-                cancel.attr('href', '?academicid=' + academicid +
-                        '&groupid=' + groupid +
-                        '&fk_user=' + teacherid +
-                        '&teachersubjectid=' + teachersubjectid +
-                        '&action=delete&id=' + event.id);
-                title.prepend(cancel);
+                if (event.source.color === "green") {
+                    var group = $('<span  class="badge" style="position:absolute; top:2px; right:2px;"/>');
+                    group.text(event.group);
+                    event.editable = false;
+                    title.prepend(group);
+                } else {
+                    var cancel = $('<a  class="delete" style="position:absolute; top:2px; right:2px;"/>');
+                    cancel.text('X');
+                    cancel.attr('id', event.id);
+                    cancel.attr('href', '?academicid=' + academicid +
+                            '&groupid=' + groupid +
+                            '&fk_user=' + teacherid +
+                            '&teachersubjectid=' + teachersubjectid +
+                            '&action=delete&id=' + event.id);
+                    title.prepend(cancel);
+                }
             }
         },
         select: function (start, end, jsEvent, view) {
@@ -138,7 +167,7 @@ $(document).ready(function () {
                 var optteacher = $('#fk_user option:selected');
                 var optgroup = $('#groupid option:selected');
                 var newEvent = new Object();
-                newEvent.title =  optsubject.text();
+                newEvent.title = optsubject.text();
                 // newEvent.id = id++;
                 newEvent.start = moment(start).format();
                 newEvent.end = moment(end).format();
@@ -154,8 +183,24 @@ $(document).ready(function () {
 //             
 
             }
+        },
+        viewDisplay: function (view) {
+            console.log(">>>>>>" + groupid);
+
+
         }
     });
+    if (groupid == -1) {
+        $('#calendar').fullCalendar('removeEventSource', eventsSources.teachersbg);
+
+        $('#calendar').fullCalendar('addEventSource', eventsSources.teachers);
+        $('#calendar').fullCalendar('refetchEvents');
+    } else {
+        $('#calendar').fullCalendar('removeEventSource', eventsSources.teachers);
+
+        $('#calendar').fullCalendar('addEventSource', eventsSources.teachersbg);
+        $('#calendar').fullCalendar('refetchEvents');
+    }
     $(".fc-agenda-slots").css("height", 200);
 
 
@@ -163,7 +208,7 @@ $(document).ready(function () {
     $("#groupid").change(function () {
         $('#title_grade').text($(this).find(":selected").text());
         $("#fk_user").trigger('change');
-       // $('#calendar').fullCalendar('refetchEvents');
+        // $('#calendar').fullCalendar('refetchEvents');
     });
     $('.fc-widget-content').hover(function () {
         var subjectid = $('#teachersubjectid').val();

@@ -40,7 +40,7 @@
     $object->fk_academicyear = $academicid;
     $object->status = 1;
     $object->entity=$conf->entity;
-    var_dump($pensum->horas);
+   // var_dump($pensum->horas);
     $object->hours = $pensum->horas;
 
     if (empty($object->ref)) {
@@ -69,3 +69,19 @@
         $action = 'create';
     }
 }
+// Action to delete
+    if ($action == 'confirm_delete') {
+        $result = $object->delete($user);
+       // var_dump($object);
+        if ($result > 0) {
+            // Delete OK
+            setEventMessages("RecordDeleted", null, 'mesgs');
+            //    header("Location: " . dol_buildpath('/educo/list.php', 1));
+           // exit;
+        } else {
+            if (!empty($object->errors))
+                setEventMessages(null, $object->errors, 'errors');
+            else
+                setEventMessages($object->error, null, 'errors');
+        }
+    }

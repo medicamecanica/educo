@@ -262,6 +262,7 @@ $sql .= " INNER JOIN " . MAIN_DB_PREFIX . "edcuo_c_asignatura as a ON a.code= t.
 if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
     $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "educo_teacher_subject_extrafields as ef on (t.rowid = ef.fk_object)";
 $sql .= " WHERE 1 = 1";
+$sql .= " AND t.fk_academicyear =".$academicid;
 //$sql.= " WHERE u.entity IN (".getEntity('mytable',1).")";
 
 if ($search_ref)
@@ -620,7 +621,11 @@ while ($i < min($num, $limit)) {
             $selected = 0;
             if (in_array($obj->rowid, $arrayofselected))
                 $selected = 1;
+             print '<a name="' . $obj->rowid . '" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&action=confirm_delete&id=' . $obj->rowid . '">';
+            print img_delete();
+            print '</a>';
             print '<input id="cb' . $obj->rowid . '" class="flat checkforselect" type="checkbox" name="toselect[]" value="' . $obj->rowid . '"' . ($selected ? ' checked="checked"' : '') . '>';
+            
         }
         print '</td>';
         if (!$i)

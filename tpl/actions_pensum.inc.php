@@ -181,7 +181,7 @@ if ($action == 'update_status') {
             // Delete OK
             setEventMessages("RecordDeleted", null, 'mesgs');
             //    header("Location: " . dol_buildpath('/educo/list.php', 1));
-            exit;
+           // exit;
         } else {
             if (!empty($object->errors))
                 setEventMessages(null, $object->errors, 'errors');

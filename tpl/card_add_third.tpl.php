@@ -18,7 +18,7 @@ $soc->particulier = 1;
 $soc->name = dolGetFirstLastname(GETPOST('socfirstname', 'alpha'), GETPOST('soclastname', 'alpha'));
 $soc->civility_id = GETPOST('soc_civility_id'); // Note: civility id is a code, not an int
 // Add non official properties
-var_dump($soc->name);
+//var_dump($soc->name);
 $soc->name_bis = $soc->name;
 $soc->firstname = GETPOST('socfirstname', 'alpha');
 $soc->firstname_ = GETPOST('socfirstname', 'alpha');
@@ -49,7 +49,7 @@ $soc->barcode = GETPOST('socbarcode', 'alpha');
 
 $soc->tva_intra = GETPOST('soctva_intra', 'alpha');
 $soc->tva_assuj = GETPOST('socassujtva_value', 'alpha');
-$soc->status = GETPOST('socstatus', 'alpha');
+$soc->status = 1;
 
 // Local Taxes
 $soc->localtax1_assuj = GETPOST('soclocaltax1assuj_value', 'alpha');

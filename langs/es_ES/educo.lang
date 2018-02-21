@@ -52,3 +52,5 @@ NewMyModule=Nuevo grado
 NewStudent=Nuevo estudiante
 AddStudentCOntact=Contacto del estudiante
 Fieldfk_soc=Responsable
+Fieldfk_teacher=Docente
+Fieldfk_group=Grupo

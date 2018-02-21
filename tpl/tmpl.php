@@ -28,36 +28,48 @@ if (!$res && file_exists("../../../../dolibarr/htdocs/main.inc.php"))
 if (!$res)
     die("Include of main fails");
 // Change this following line to use the correct relative path from htdocs
-require_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
-require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
-require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
-dol_include_once('/educo/class/educopensum.class.php');
-dol_include_once('/educo/class/educoacadyear.class.php');
-dol_include_once('/educo/class/educogroup.class.php');
-dol_include_once('/educo/class/html.formeduco.class.php');
-dol_include_once('/educo/class/event.class.php');
+include_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
+dol_include_once('/educo/class/educostudent.class.php');
+require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
+require_once DOL_DOCUMENT_ROOT . '/contact/class/contact.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/contact.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/images.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/doleditor.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.form.class.php';
+require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
+require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
+$langs->load("companies");
+$langs->load("users");
+$langs->load("other");
+$langs->load("commercial");
 
 // Load traductions files requiredby by page
 $langs->load("educo");
 $langs->load("other");
 
-$academicid = GETPOST('academicid', 'int');
-$teacherid = GETPOST('teacherid', 'int');
-if(!$teacherid)
-    print json_encode(array());
-$subjects = fetchSubjectsTeacher($academicid, $teacherid);
-$array = array();
-//var_dump($subjects);
-foreach ($subjects as $e) {  
-    $event = new Event($e);
-    $event->id=$e->rowid;
-    $event->title=$e->subject_label;
-    $event->properties['group']=$e->group_label;
-    $event->setStart($e->datep);
-    $event->setEnd($e->datef);
-    //$event->SyncWeek();
-    $array[] = $event->toArray();
-}
-print json_encode($array);
-die;
+// Get parameters
+$id = GETPOST('id', 'int');
+$action = GETPOST('action', 'alpha');
+$cancel = GETPOST('cancel');
+$backtopage = GETPOST('backtopage');
+$myparam = GETPOST('myparam', 'alpha');
+/* * *************************************************
+ * VIEW
+ *
+ * Put here all code to build page
+ * ************************************************** */
+
+llxHeader('', 'MyPageName', '');
+
+$form = new Form($db);
+
+
+// End of page
+llxFooter();
+$db->close();
+
