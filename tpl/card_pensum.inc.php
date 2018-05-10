@@ -41,7 +41,7 @@ if ($action != 'create') {
 if ($action == 'create') {
     print load_fiche_titre($langs->trans("NewPensum"));
 
-    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+    print '<form id="formcreate" method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
     print '<input type="hidden" name="action" value="add">';
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
     print '<input type="hidden" name="academicid" value="' . $academicid . '">';
@@ -51,12 +51,19 @@ if ($action == 'create') {
     print '<table class="border centpercent">' . "\n";
 // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
 // 
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldref") . '</td><td><input class="flat" type="text" name="ref" value="' . GETPOST('ref') . '"></td></tr>';
+    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldref") . '</td><td><input class="flat" type="text" name="ref" value="' . GETPOST('ref') . '"></td></tr>';
+//     print '<tr><td class="fieldrequired">' . $langs->trans("FieldWorkingDay") . '</td><td>';
+//    print $formeduco->select_workingday('workingday', $object->workingday,1);
+//     print '</td></tr>';
+    print '<tr><td  class="fieldrequired">' . $langs->trans("Fieldlevel") . '</td><td>';
+   // var_dump($level);
+    print $formeduco->select_level('level', $level)
+            . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldgrado_code") . '</td><td>';
-    print $formeduco->select_dictionary('grado_code', 'educo_c_grado', 'code', 'label', $search_grado_code)
+    print $formeduco->select_dictionary('grado_code', 'educo_c_grado', 'code', 'label', $search_grado_code,null,null,array('level='.$level))
             . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldasignature_code") . '</td><td>';
-    print $formeduco->select_dictionary('asignature_code', 'edcuo_c_asignatura', 'code', 'label', $object->signatura_code) . '</td></tr>';
+    print $formeduco->select_dictionary('asignature_code', 'edcuo_c_asignatura', 'code', 'label', $object->signatura_code,null,null,array('level like \'%'.$level.'%\'')) . '</td></tr>';
 //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_academicyear") . '</td><td><input class="flat" type="text" name="fk_academicyear" value="' . GETPOST('fk_academicyear') . '"></td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldhoras") . '</td><td><input class="flat" type="text" name="horas" value="' . GETPOST('horas') . '"></td></tr>';
 //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatut") . '</td><td><input class="flat" type="text" name="statut" value="' . GETPOST('statut') . '"></td></tr>';

@@ -66,6 +66,23 @@ function card_create($object, $contact, $soc) {
     include DOL_DOCUMENT_ROOT . '/educo/tpl/card_create_third.tpl.php';
 }
 
+function class_header($object) {
+    global $langs;
+    $head = array();
+    $h = 0;
+
+    $head[$h][0] = dol_buildpath('/educo/teacher/group_class.php?groupid=' . $object->id . '&pensumid=' . $object->pensumid, 1);
+    $head[$h][1] = $langs->trans("Card");
+    $head[$h][2] = 'card';
+
+    $h++;
+    $head[$h][0] = dol_buildpath('/educo/teacher/qualifications.php?groupid=' . $object->id . '&pensumid=' . $object->pensumid, 1);
+    $head[$h][1] = $langs->trans("Qualifications");
+    $head[$h][2] = 'qualifications';
+
+    return $head;
+}
+
 function academicyear_header($object) {
     global $langs;
     $head = array();
@@ -117,14 +134,25 @@ function student_header($object) {
     $head[$h][0] = dol_buildpath('/educo/student/suport.php?id=' . $object->id, 1);
     $head[$h][1] = $langs->trans("Suport");
     $head[$h][2] = 'suport';
-    
+
     $h++;
     $head[$h][0] = dol_buildpath('/educo/student/relatives.php?id=' . $object->id, 1);
     $head[$h][1] = $langs->trans("Relatives");
     $head[$h][2] = 'relatives';
     
+    $h++;
+    $head[$h][0] = dol_buildpath('/educo/student/observations.php?id=' . $object->id, 1);
+    $head[$h][1] = $langs->trans("Observations");
+    $head[$h][2] = 'observations';
+    
+     $h++;
+    $head[$h][0] = dol_buildpath('/educo/student/absences.php?id=' . $object->id, 1);
+    $head[$h][1] = $langs->trans("Absences");
+    $head[$h][2] = 'absences';
+
     return $head;
 }
+
 function fetchTeacherByGroup($academiciid, $groupid, $sortorder = '', $sortfield = '', $limit = 0, $offset = 0) {
     dol_syslog(__METHOD__, LOG_DEBUG);
 
@@ -325,8 +353,52 @@ function fetchHorario($academicid, $groupid, $teacherid, $sortorder = '', $sortf
     }
 }
 
-function fetchSubjectsTeacher($academicid, $teacherid, $sortorder = '', $sortfield = '', $limit = 0, $offset = 0) {
+function teacherHours($academicid, $teacherid, $sortorder = '', $sortfield = '', $limit = 0, $offset = 0) {
     global $db, $conf;
+    dol_syslog(__METHOD__, LOG_DEBUG);
+
+    $sql = 'SELECT';
+    $sql .= " sum(TIMESTAMPDIFF(HOUR, datep, datef)) as total";
+
+    $sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_horario as t';
+    $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'edcuo_c_asignatura AS s ON subject_code=s.code';
+    $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'educo_teacher_subject AS ts ON t.fk_teach_sub=ts.rowid';
+    $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'user AS u ON ts.fk_user=u.rowid';
+    $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'educo_group AS g ON t.fk_group=g.rowid';
+    $sql .= ' WHERE 1 = 1';
+    if (!empty($conf->multicompany->enabled)) {
+        $sql .= " AND entity IN (" . getEntity("educopensum", 1) . ")";
+    }
+
+    $sql .= " AND ts.fk_academicyear=" . $academicid;
+    $sql .= " AND ts.fk_user=" . $teacherid;
+    if (!empty($sortfield)) {
+        $sql .= $db->order($sortfield, $sortorder);
+    }
+    if (!empty($limit)) {
+        $sql .= ' ' . $db->plimit($limit + 1, $offset);
+    }
+    // var_dump($sql);
+
+    $resql = $db->query($sql);
+    if ($resql) {
+        $num = $db->num_rows($resql);
+        $total = 0;
+        while ($obj = $db->fetch_object($resql)) {
+            $total = $obj->total;
+        }
+        $db->free($resql);
+
+        return $total;
+    } else {
+        print 'Error ' . $db->lasterror();
+
+        return - 1;
+    }
+}
+
+function fetchSubjectsTeacher($academicid, $teacherid, $sortorder = '', $sortfield = '', $limit = 0, $offset = 0) {
+    global $db, $conf, $langs;
     dol_syslog(__METHOD__, LOG_DEBUG);
 
     $sql = 'SELECT';
@@ -345,6 +417,7 @@ function fetchSubjectsTeacher($academicid, $teacherid, $sortorder = '', $sortfie
     $sql .= " t.grado_code,";
     $sql .= " concat(u.firstname,' ',u.lastname)as teacher_name,";
     $sql .= " s.label as subject_label,";
+    $sql .= "g.workingday,";
     $sql .= " concat(t.grado_code,' ',g.sufix) as group_label";
     $sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_horario as t';
     $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'edcuo_c_asignatura AS s ON subject_code=s.code';
@@ -448,14 +521,14 @@ function fetchTeacherSubjects($academicid, $teacherid, $sortorder = '', $sortfie
         //var_dump(count($lines));
         return $lines;
     } else {
-       // print 'Error ' . $db->lasterror();
+        // print 'Error ' . $db->lasterror();
         // dol_syslog(__METHOD__ . ' ' . implode(',', $errors), LOG_ERR);
 
         return - 1;
     }
 }
 
-function fetchSubjectsGrade($academicid, $grado_code,$groupid, $sortorder = '', $sortfield = '', $limit = 0, $offset = 0) {
+function fetchSubjectsGrade($academicid, $grado_code, $groupid, $sortorder = '', $sortfield = '', $limit = 0, $offset = 0) {
     global $conf, $db;
     dol_syslog(__METHOD__, LOG_DEBUG);
 
@@ -476,7 +549,7 @@ function fetchSubjectsGrade($academicid, $grado_code,$groupid, $sortorder = '', 
     $sql .= '(SELECT';
     $sql .= " sum(h.duration) ";
     $sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_horario as h';
-    $sql .= ' WHERE h.fk_group=' . $groupid.' AND h.subject_code=t.asignature_code'
+    $sql .= ' WHERE h.fk_group=' . $groupid . ' AND h.subject_code=t.asignature_code'
             . ') as total_duration';
 
     $sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_pensum as t';
@@ -501,10 +574,10 @@ function fetchSubjectsGrade($academicid, $grado_code,$groupid, $sortorder = '', 
         $num = $db->num_rows($resql);
 
         while ($obj = $db->fetch_object($resql)) {
-               $lines[] = $obj;
+            $lines[] = $obj;
         }
         $db->free($resql);
-   //     var_dump(count($lines));
+        //     var_dump(count($lines));
         return $lines;
     } else {
         $errors[] = 'Error ' . $db->lasterror();
@@ -513,110 +586,115 @@ function fetchSubjectsGrade($academicid, $grado_code,$groupid, $sortorder = '', 
         return - 1;
     }
 }
+
 /**
  * 		Show html area for list of contacts
  *
- *		@param	Conf		$conf		Object conf
+ * 		@param	Conf		$conf		Object conf
  * 		@param	Translate	$langs		Object langs
  * 		@param	DoliDB		$db			Database handler
  * 		@param	Societe		$object		Third party object
  *      @param  string		$backtopage	Url to go once contact is created
  *      @return	void
  */
-function show_relatives($conf,$langs,$db,$object,$backtopage='')
-{
-    global $user,$conf;
+function show_relatives($conf, $langs, $db, $object, $backtopage = '') {
+    global $user, $conf;
     global $bc;
 
-    $form= new Form($db);
+    $form = new Form($db);
 
-    $sortfield = GETPOST("sortfield",'alpha');
-    $sortorder = GETPOST("sortorder",'alpha');
-    $page = GETPOST('page','int');
-    $search_status		= GETPOST("search_status",'int');
-    if ($search_status=='') $search_status=1; // always display activ customer first
-    $search_name = GETPOST("search_name",'alpha');
-    $search_addressphone = GETPOST("search_addressphone",'alpha');
+    $sortfield = GETPOST("sortfield", 'alpha');
+    $sortorder = GETPOST("sortorder", 'alpha');
+    $page = GETPOST('page', 'int');
+    $search_status = GETPOST("search_status", 'int');
+    if ($search_status == '')
+        $search_status = 1; // always display activ customer first
+    $search_name = GETPOST("search_name", 'alpha');
+    $search_addressphone = GETPOST("search_addressphone", 'alpha');
 
-    if (! $sortorder) $sortorder="ASC";
-    if (! $sortfield) $sortfield="p.lastname";
+    if (!$sortorder)
+        $sortorder = "ASC";
+    if (!$sortfield)
+        $sortfield = "p.lastname";
 
-    $i=-1;
+    $i = -1;
 
     $contactstatic = new Contact($db);
 
-    if (! empty($conf->clicktodial->enabled))
-    {
+    if (!empty($conf->clicktodial->enabled)) {
         $user->fetch_clicktodial(); // lecture des infos de clicktodial
     }
 
-    $buttoncreate='';
-    if ($user->rights->societe->contact->creer)
-    {
-    	$addcontact = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("AddContact") : $langs->trans("AddContactAddress"));
-		$buttoncreate='<a class="addnewrecord" href="'.DOL_URL_ROOT.'/contact/card.php?socid='.$object->id.'&amp;action=create&amp;backtopage='.urlencode($backtopage).'">'.$addcontact;
-		if (empty($conf->dol_optimize_smallscreen)) $buttoncreate.=' '.img_picto($addcontact,'filenew');
-		$buttoncreate.='</a>'."\n";
+    $buttoncreate = '';
+    if ($user->rights->societe->contact->creer) {
+        $addcontact = (!empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("AddContact") : $langs->trans("AddContactAddress"));
+        $buttoncreate = '<a class="addnewrecord" href="' . DOL_URL_ROOT . '/contact/card.php?action=create&amp;backtopage=' . urlencode($backtopage) . '">' . $addcontact;
+        if (empty($conf->dol_optimize_smallscreen))
+            $buttoncreate .= ' ' . img_picto($addcontact, 'filenew');
+        $buttoncreate .= '</a>' . "\n";
     }
 
     print "\n";
 
-    $title =  $langs->trans("ContactsForStudent") ;
-    print load_fiche_titre($title,$buttoncreate,'');
+    $title = $langs->trans("ContactsForStudent");
+    print load_fiche_titre($title, $buttoncreate, '');
 
-    print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'" name="formfilter">';
-    print '<input type="hidden" name="socid" value="'.$object->id.'">';
-    print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
-    print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
-    print '<input type="hidden" name="page" value="'.$page.'">';
+    print '<form method="GET" action="' . $_SERVER["PHP_SELF"] . '" name="formfilter">';
+    print '<input type="hidden" name="socid" value="' . $object->id . '">';
+    print '<input type="hidden" name="sortorder" value="' . $sortorder . '">';
+    print '<input type="hidden" name="sortfield" value="' . $sortfield . '">';
+    print '<input type="hidden" name="page" value="' . $page . '">';
 
-    print "\n".'<table class="noborder" width="100%">'."\n";
+    print "\n" . '<table class="noborder" width="100%">' . "\n";
 
-    $param="socid=".$object->id;
-    if ($search_status != '') $param.='&amp;search_status='.$search_status;
-    if ($search_name != '') $param.='&amp;search_name='.urlencode($search_name);
+    $param = "socid=" . $object->id;
+    if ($search_status != '')
+        $param .= '&amp;search_status=' . $search_status;
+    if ($search_name != '')
+        $param .= '&amp;search_name=' . urlencode($search_name);
 
-    $colspan=9;
+    $colspan = 9;
     print '<tr class="liste_titre">';
-    print_liste_field_titre("Name",$_SERVER["PHP_SELF"],"p.lastname","",$param,'',$sortfield,$sortorder);
-    print_liste_field_titre("Type",$_SERVER["PHP_SELF"],"p.poste","",$param,'',$sortfield,$sortorder);
-    print_liste_field_titre( $langs->trans("Address").' / '.$langs->trans("Phone").' / '.$langs->trans("Email"),$_SERVER["PHP_SELF"],"","",$param,'',$sortfield,$sortorder);
-    print_liste_field_titre("Status",$_SERVER["PHP_SELF"],"p.statut","",$param,'',$sortfield,$sortorder);
+    print_liste_field_titre("Name", $_SERVER["PHP_SELF"], "p.lastname", "", $param, '', $sortfield, $sortorder);
+    print_liste_field_titre("Type", $_SERVER["PHP_SELF"], "p.poste", "", $param, '', $sortfield, $sortorder);
+    print_liste_field_titre($langs->trans("Address") . ' / ' . $langs->trans("Phone") . ' / ' . $langs->trans("Email"), $_SERVER["PHP_SELF"], "", "", $param, '', $sortfield, $sortorder);
+    print_liste_field_titre("Status", $_SERVER["PHP_SELF"], "p.statut", "", $param, '', $sortfield, $sortorder);
     // Add to agenda
-    if (! empty($conf->agenda->enabled) && ! empty($user->rights->agenda->myactions->create))
-    {
-    	$colspan++;
+    if (!empty($conf->agenda->enabled) && !empty($user->rights->agenda->myactions->create)) {
+        $colspan++;
         print_liste_field_titre('');
     }
     // Edit
     print_liste_field_titre('');
-	print "</tr>\n";
+    print "</tr>\n";
 
 
     $sql = "SELECT p.rowid as contact_id, p.lastname, p.firstname, p.fk_pays as country_id, p.civility, p.poste, p.phone as phone_pro, p.phone_mobile, p.phone_perso, p.fax, p.email, p.skype, p.statut, p.photo,";
     $sql .= " p.civility as civility_id, p.address, p.zip, p.town,";
-    $sql.="cs.rowid, `ref`, `fk_contact`, `fk_estudiante`, `type`, `note`";
-    $sql .= " FROM ".MAIN_DB_PREFIX."educo_contact_student as cs";
-     $sql .= " INNER JOIN ".MAIN_DB_PREFIX."socpeople p ON cs.fk_contact=p.rowid";
-    $sql .= " WHERE cs.fk_estudiante = ".$object->id;
-    if ($search_status!='' && $search_status != '-1') $sql .= " AND p.statut = ".$db->escape($search_status);
-    if ($search_name)       $sql .= " AND (p.lastname LIKE '%".$db->escape($search_name)."%' OR p.firstname LIKE '%".$db->escape($search_name)."%')";
-    $sql.= " ORDER BY $sortfield $sortorder";
+    $sql .= "cs.rowid, `ref`, `fk_contact`, `fk_estudiante`, `type`, `note`";
+    $sql .= " FROM " . MAIN_DB_PREFIX . "educo_contact_student as cs";
+    $sql .= " INNER JOIN " . MAIN_DB_PREFIX . "socpeople p ON cs.fk_contact=p.rowid";
+    $sql .= " WHERE cs.fk_estudiante = " . $object->id;
+    if ($search_status != '' && $search_status != '-1')
+        $sql .= " AND p.statut = " . $db->escape($search_status);
+    if ($search_name)
+        $sql .= " AND (p.lastname LIKE '%" . $db->escape($search_name) . "%' OR p.firstname LIKE '%" . $db->escape($search_name) . "%')";
+    $sql .= " ORDER BY $sortfield $sortorder";
 
     dol_syslog('core/lib/company.lib.php :: show_contacts', LOG_DEBUG);
     $result = $db->query($sql);
-    if (! $result) dol_print_error($db);
+    if (!$result)
+        dol_print_error($db);
 
     $num = $db->num_rows($result);
 
-	$var=true;
-	if ($num || (GETPOST('button_search') || GETPOST('button_search.x') || GETPOST('button_search_x')))
-    {
+    $var = true;
+    if ($num || (GETPOST('button_search') || GETPOST('button_search.x') || GETPOST('button_search_x'))) {
         print '<tr class="liste_titre">';
 
         // Photo - Name
         print '<td class="liste_titre">';
-        print '<input type="text" class="flat" name="search_name" size="20" value="'.$search_name.'">';
+        print '<input type="text" class="flat" name="search_name" size="20" value="' . $search_name . '">';
         print '</td>';
 
         // Position
@@ -628,27 +706,25 @@ function show_relatives($conf,$langs,$db,$object,$backtopage='')
 
         // Status
         print '<td class="liste_titre maxwidthonsmartphone">';
-        print $form->selectarray('search_status', array('-1'=>'','0'=>$contactstatic->LibStatut(0,1),'1'=>$contactstatic->LibStatut(1,1)),$search_status);
+        print $form->selectarray('search_status', array('-1' => '', '0' => $contactstatic->LibStatut(0, 1), '1' => $contactstatic->LibStatut(1, 1)), $search_status);
         print '</td>';
 
         // Add to agenda
-        if (! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
-        {
-        	$colspan++;
+        if (!empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create) {
+            $colspan++;
             print '<td class="liste_titre">&nbsp;</td>';
         }
 
-    	// Edit
+        // Edit
         print '<td class="liste_titre" align="right">';
-        print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+        print '<input type="image" class="liste_titre" name="button_search" src="' . img_picto($langs->trans("Search"), 'search.png', '', '', 1) . '" value="' . dol_escape_htmltag($langs->trans("Search")) . '" title="' . dol_escape_htmltag($langs->trans("Search")) . '">';
         print '</td>';
 
         print "</tr>";
 
-        $i=0;
+        $i = 0;
 
-        while ($i < $num)
-        {
+        while ($i < $num) {
             $obj = $db->fetch_object($result);
 
             $contactstatic->id = $obj->rowid;
@@ -677,15 +753,16 @@ function show_relatives($conf,$langs,$db,$object,$backtopage='')
 
             print "<tr>";
 
-			// Photo - Name
-			print '<td>';
-            print $form->showphoto('contact',$contactstatic,0,0,0,'photorefnoborder valignmiddle marginrightonly','small',1,0,1);
-			print $contactstatic->getNomUrl(0,'',0,'&backtopage='.urlencode($backtopage));
-			print '</td>';
+            // Photo - Name
+            print '<td>';
+            print $form->showphoto('contact', $contactstatic, 0, 0, 0, 'photorefnoborder valignmiddle marginrightonly', 'small', 1, 0, 1);
+            print $contactstatic->getNomUrl(0, '', 0, '&backtopage=' . urlencode($backtopage));
+            print '</td>';
 
-			// Job position
-			print '<td>';
-            if ($obj->type) print $obj->type;
+            // Job position
+            print '<td>';
+            if ($obj->type)
+                print $obj->type;
             print '</td>';
 
             // Address - Phone - Email
@@ -694,40 +771,49 @@ function show_relatives($conf,$langs,$db,$object,$backtopage='')
             print '</td>';
 
             // Status
-			print '<td>'.$contactstatic->getLibStatut(5).'</td>';
+            print '<td>' . $contactstatic->getLibStatut(5) . '</td>';
 
             // Add to agenda
-            if (! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
-            {
+            if (!empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create) {
                 print '<td align="center">';
-                print '<a href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create&actioncode=&contactid='.$obj->rowid.'&socid='.$object->id.'&backtopage='.urlencode($backtopage).'">';
-                print img_object($langs->trans("Event"),"action");
+                print '<a href="' . DOL_URL_ROOT . '/comm/action/card.php?action=create&actioncode=&contactid=' . $obj->rowid . '&socid=' . $object->id . '&backtopage=' . urlencode($backtopage) . '">';
+                print img_object($langs->trans("Event"), "action");
                 print '</a></td>';
             }
 
             // Edit
-            if ($user->rights->societe->contact->creer)
-            {
+            if ($user->rights->societe->contact->creer) {
                 print '<td align="right">';
-                print '<a href="'.DOL_URL_ROOT.'/contact/card.php?action=edit&amp;id='.$obj->rowid.'&amp;backtopage='.urlencode($backtopage).'">';
+                print '<a href="' . DOL_URL_ROOT . '/contact/card.php?action=edit&amp;id=' . $obj->rowid . '&amp;backtopage=' . urlencode($backtopage) . '">';
                 print img_edit();
                 print '</a></td>';
-            }
-            else print '<td>&nbsp;</td>';
+            } else
+                print '<td>&nbsp;</td>';
 
             print "</tr>\n";
             $i++;
         }
     }
-    else
-	{
-        print "<tr ".$bc[! $var].">";
-        print '<td colspan="'.$colspan.'" class="opacitymedium">'.$langs->trans("None").'</td>';
+    else {
+        print "<tr " . $bc[!$var] . ">";
+        print '<td colspan="' . $colspan . '" class="opacitymedium">' . $langs->trans("None") . '</td>';
         print "</tr>\n";
     }
     print "\n</table>\n";
 
-    print '</form>'."\n";
+    print '</form>' . "\n";
 
     return $i;
+}
+
+function student_age($birthday, $cc) {
+    global $langs;
+    date_default_timezone_set('America/Bogota');
+
+// birthdate format is YYYY-MM-DD 
+    $birth = new DateTime(dol_print_date($birthday, '%Y-%m-%d'));
+    $today = new DateTime();
+    $diff = $birth->diff($today);
+    $age = $diff->format('%y');
+    return $age >= 18 && empty($cc) ? $age . '  ' . img_warning($langs->trans('+18AndAnyCC'), ' class="classfortooltip"') : $age; // will output 45 
 }

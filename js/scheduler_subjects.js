@@ -228,10 +228,11 @@ $(document).ready(function () {
                 var div = $('#pensum_grado');
                 div.html('');
                 var codes = [];
-
+              
                 $.each(data, function (key, item) {
                     var text = item.subject_label;
                     var hours = item.count + "/" + item.horas;
+                     
                     var code = item.asignature_code;
                     var item = $('<div class="boxstats"/>');
 
@@ -252,7 +253,7 @@ $(document).ready(function () {
                     codes.push(code);
                     //$('#list').listview('refresh');
                 });
-                // console.log(codes);
+              
                 $.data(div, "codes", codes);
             }
         });

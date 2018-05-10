@@ -131,6 +131,12 @@ if (empty($reshook)) {
 
         $action = '';
     }
+    if ($id > 0 || !empty($ref)) {
+        $academicid = $object->fk_academicyear;
+        $groupid = $object->fk_grupo;
+        $student->fetch($object->fk_estudiante);
+    }
+
     if ($academicid > 0)
         $ret = $academic->fetch($academicid);
     if ($groupid > 0)
@@ -155,6 +161,21 @@ if (empty($reshook)) {
         $object->fk_academicyear = $academicid;
         $object->entity = $conf->entity;
         $object->datec = dol_now();
+         $object->victim = GETPOST('victim', 'int');
+        $object->expelled_from = GETPOST('expelled_from', 'alpha');
+        $object->capacity = GETPOST('capacity', 'alpha');
+        $object->disability = GETPOST('disability', 'alpha');
+        $object->from_private = GETPOST('from_private', 'alpha');
+        $object->from_public = GETPOST('from_public', 'alpha');
+        $object->from = GETPOST('from', 'alpha');
+        $object->icbf = GETPOST('icbf', 'alpha');
+      //  $object->courses = GETPOST('courses', 'alpha');
+        $object->subsidized = GETPOST('subsidized', 'int');
+        $object->repeating = GETPOST('repeating', 'int');
+        $object->new = GETPOST('new', 'int');
+        $object->situation = GETPOST('situation', 'int');
+        $courses = GETPOST('courses', 'array');
+        $object->courses= implode(',', $courses);
 
 
         if (empty($object->ref)) {
@@ -195,13 +216,30 @@ if (empty($reshook)) {
         $error = 0;
 
 
-        $object->ref = GETPOST('ref', 'alpha');
+        $object->ref = $academic->ref . '-' . $group->grado_code . '-' . $studentref;
         $object->statut = GETPOST('statut', 'int');
-        $object->fk_grupo = GETPOST('fk_grupo', 'int');
-        $object->fk_estudiante = GETPOST('fk_estudiante', 'int');
-        $object->fk_user = GETPOST('fk_user', 'int');
-        $object->fk_academicyear = GETPOST('fk_academicyear', 'int');
-        $object->entity = GETPOST('entity', 'int');
+        $object->fk_grupo = GETPOST('groupid', 'int');
+       // $object->fk_estudiante = GETPOST('fk_estudiante', 'int');
+      //  $object->fk_user = GETPOST('fk_user', 'int');
+        $object->fk_academicyear = GETPOST('academicid', 'int');
+      //  $object->entity = GETPOST('entity', 'int');
+        $object->victim = GETPOST('victim', 'int');
+        $object->expelled_from = GETPOST('expelled_from', 'alpha');
+        $object->capacity = GETPOST('capacity', 'alpha');
+        $object->disability = GETPOST('disability', 'alpha');
+        $object->from_private = GETPOST('from_private', 'alpha');
+        $object->from_public = GETPOST('from_public', 'alpha');
+        $object->from = GETPOST('from', 'alpha');
+        $object->icbf = GETPOST('icbf', 'alpha');
+      //  $object->courses = GETPOST('courses', 'alpha');
+        $object->subsidized = GETPOST('subsidized', 'int');
+        $object->repeating = GETPOST('repeating', 'int');
+        $object->new = GETPOST('new', 'int');
+        $object->situation = GETPOST('situation', 'int');
+        $courses = GETPOST('courses', 'array');
+        $object->courses= implode(',', $courses);
+        $object->tms= dol_now();
+
 
 
 
@@ -216,6 +254,7 @@ if (empty($reshook)) {
             if ($result > 0) {
                 $action = 'view';
             } else {
+                var_dump($object->db->lastquery);
                 // Creation KO
                 if (!empty($object->errors))
                     setEventMessages(null, $object->errors, 'errors');
@@ -281,8 +320,9 @@ jQuery(document).ready(function() {
 if ($action == 'create') {
     print load_fiche_titre($langs->trans("NewEnrollment"));
 
-    print '<form id="formcreate" method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
-    print '<input type="hidden" name="action" value="add">';
+    print '<form id="form" method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+    print '<input type="hidden" id="action" name="action" value="add">';
+
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
 
     dol_fiche_head();
@@ -302,6 +342,23 @@ if ($action == 'create') {
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_estudiante") . '</td><td>';
     print $formEduco->select_student('student', $studentid, $studentref, DOL_URL_ROOT . '/educo/ajax/student.php');
     print '</td></tr>';
+      print '<tr><td class="fieldrequired">' . $langs->trans("Fieldvictim") . '</td><td>' . $formEduco->select_victim('victim', $object->victim) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldexpelled_from") . '</td><td><input class="flat" type="text" name="expelled_from" value="' . $object->expelled_from . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddisability") . '</td><td><input class="flat" type="text" name="disability" value="' . $object->disability . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldcapacity") . '</td><td><input class="flat" type="text" name="capacity" value="' . $object->capacity . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom_private") . '</td><td><input class="flat" type="text" name="from_private" value="' . $object->from_private . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom_public") . '</td><td><input class="flat" type="text" name="from_public" value="' . $object->from_public . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom") . '</td><td><input class="flat" type="text" name="from" value="' . $object->from . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldicbf") . '</td><td><input class="flat" type="text" name="icbf" value="' . $object->icbf . '"></td></tr>';
+    $array = array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+    if(!is_array($courses))
+        $courses= empty ($object->courses)?array():explode(',',$object->courses);
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldcourses") . '</td><td>' . $form->multiselectarray('courses', $array,$courses) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsubsidized") . '</td><td>' . $form->selectyesno('subsidized', $object->subsidized,1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldrepeating") . '</td><td>' . $form->selectyesno('repeating', $object->repeating,1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnew") . '</td><td>' . $form->selectyesno('new', $object->new,1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsituation") . '</td><td><input class="flat" type="text" name="situation" value="' . $object->situation . '"></td></tr>';
+
     //   print '<tr><td class="fieldrequired">' . $langs->trans("Fieldcordinator") . '</td><td><input class="flat" type="text" name="fk_user" value="' . GETPOST('fk_user') . '"></td></tr>';
 //print '<tr><td class="fieldrequired">'.$langs->trans("Fieldentity").'</td><td><input class="flat" type="text" name="entity" value="'.GETPOST('entity').'"></td></tr>';
 
@@ -320,8 +377,8 @@ if ($action == 'create') {
 if (($id || $ref) && $action == 'edit') {
     print load_fiche_titre($langs->trans("Enrollment"));
 
-    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
-    print '<input type="hidden" name="action" value="update">';
+    print '<form id="form" method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+    print '<input type="hidden" id="action" name="action" value="update">';
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
     print '<input type="hidden" name="id" value="' . $object->id . '">';
 
@@ -330,13 +387,37 @@ if (($id || $ref) && $action == 'edit') {
     print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
     // 
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldref") . '</td><td><input class="flat" type="text" name="ref" value="' . $object->ref . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatut") . '</td><td><input class="flat" type="text" name="statut" value="' . $object->statut . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_grupo") . '</td><td><input class="flat" type="text" name="fk_grupo" value="' . $object->fk_grupo . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_estudiante") . '</td><td><input class="flat" type="text" name="fk_estudiante" value="' . $object->fk_estudiante . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_user") . '</td><td><input class="flat" type="text" name="fk_user" value="' . $object->fk_user . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_academicyear") . '</td><td><input class="flat" type="text" name="fk_academicyear" value="' . $object->fk_academicyear . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td><input class="flat" type="text" name="entity" value="' . $object->entity . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_academicyear") . '</td>';
+    print '<td>';
+    print $formEduco->select_academic('academicid', $academicid, 1);
+    print '</td></tr>';
+//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldref").'</td><td><input class="flat" type="text" name="ref" value="'.GETPOST('ref').'"></td></tr>';
+//print '<tr><td class="fieldrequired">'.$langs->trans("Fieldstatut").'</td><td><input class="flat" type="text" name="statut" value="'.GETPOST('statut').'"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_grupo") . '</td><td>';
+    print $formEduco->select_groups('groupid', $academicid, $groupid, 1);
+    print '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_estudiante") . '</td><td>';
+    print $student->getNomUrl(1);
+    print '<input  type="text" name="studentref" value="' . $student->ref . '">';
+    print '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldvictim") . '</td><td>' . $formEduco->select_victim('victim', $object->victim) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldexpelled_from") . '</td><td><input class="flat" type="text" name="expelled_from" value="' . $object->expelled_from . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddisability") . '</td><td><input class="flat" type="text" name="disability" value="' . $object->disability . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldcapacity") . '</td><td><input class="flat" type="text" name="capacity" value="' . $object->capacity . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom_private") . '</td><td><input class="flat" type="text" name="from_private" value="' . $object->from_private . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom_public") . '</td><td><input class="flat" type="text" name="from_public" value="' . $object->from_public . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom") . '</td><td><input class="flat" type="text" name="from" value="' . $object->from . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldicbf") . '</td><td><input class="flat" type="text" name="icbf" value="' . $object->icbf . '"></td></tr>';
+    $array = array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+    if(!is_array($courses))
+        $courses= empty ($object->courses)?array():explode(',',$object->courses);
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldcourses") . '</td><td>' . $form->multiselectarray('courses', $array,$courses) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsubsidized") . '</td><td>' . $form->selectyesno('subsidized', $object->subsidized,1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldrepeating") . '</td><td>' . $form->selectyesno('repeating', $object->repeating,1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnew") . '</td><td>' . $form->selectyesno('new', $object->new,1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsituation") . '</td><td><input class="flat" type="text" name="situation" value="' . $object->situation . '"></td></tr>';
+
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td>'.$formEduco->select_enrollment_state('statut', $object->statut) .'</td></tr>';
 
     print '</table>';
 
@@ -373,10 +454,27 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td>'.$object->label.'</td></tr>';
     // 
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldref") . '</td><td>' . $object->ref . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatut") . '</td><td>' . $object->statut . '</td></tr>';
+    print '<tr><td class="fieldrequired" width="35%">' . $langs->trans("Fieldref") . '</td><td>' . $object->ref . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatut") . '</td><td>' . $langs->trans('EnrollmentState'.$object->statut) . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_grupo") . '</td><td>' . $group->getNomUrl(1) . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_estudiante") . '</td><td>' . $student->getNomUrl(1) . '</td></tr>';
+
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldvictim") . '</td><td>' . $langs->trans("Victim" . $object->victim) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldexpelled_from") . '</td><td>' . $object->expelled_from . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddisability") . '</td><td>' . $object->disability . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldcapacity") . '</td><td>' . $object->capacity . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom_private") . '</td><td>' . $object->from_private . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom_public") . '</td><td>' . $object->from_public . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfrom") . '</td><td>' . $object->from . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldicbf") . '</td><td>' . $object->icbf . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldcourses") . '</td><td>' . $object->courses . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsubsidized") . '</td><td>' . ($object->subsidized ? $langs->trans('Yes') : $langs->trans('No')) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldrepeating") . '</td><td>' . ($object->repeating ? $langs->trans('Yes') : $langs->trans('No')) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnew") . '</td><td>' . ($object->new ? $langs->trans('Yes') : $langs->trans('No')) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsituation") . '</td><td>' . $object->situation . '</td></tr>';
+    //  print '<tr><td class="fieldrequired">' . $langs->trans("Fieldregime") . '</td><td>' . $langs->trans("Regime" . $object->regime) . '</td></tr>';
+    // print '<tr><td class="fieldrequired">' . $langs->trans("Fieldethnicity") . '</td><td>' . $langs->trans("Ethnicity" . $object->ethnicity) . '</td></tr>';
+
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_user") . '</td><td>' . $enrollman->getNomUrl(1) . '</td></tr>';
 //    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_academicyear") . '</td><td>' . $academicid->getNomUrl(1) . '</td></tr>';
     //  print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td>' . $object->entity . '</td></tr>';

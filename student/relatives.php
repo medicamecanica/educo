@@ -113,7 +113,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 llxHeader('', 'MyPageName', '');
 
 $form = new Form($db);
-dol_fiche_head($head, 'relatives', $langs->trans("Student"), 0, 'generic');
+dol_fiche_head($head, 'relatives', $langs->trans("Student"), 0, 'student@educo');
 
 // Part to create
 
@@ -144,7 +144,7 @@ dol_fiche_head($head, 'relatives', $langs->trans("Student"), 0, 'generic');
 
 
 
-show_relatives($conf, $langs, $db, $object);
+show_relatives($conf, $langs, $db, $object, $_SERVER["PHP_SELF"].'?id='.$object->id);
 dol_fiche_end();
 // End of page
 llxFooter();

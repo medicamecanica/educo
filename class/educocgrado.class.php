@@ -184,11 +184,11 @@ class Educocgrado extends CommonObject
 		    $sql .= " AND entity IN (" . getEntity("educocgrado", 1) . ")";
 		}
 		if (null !== $ref) {
-			$sql .= ' AND t.code = ' . '\'' . $ref . '\'';
+			$sql .= ' AND t.code = \'' . $ref . '\'';
 		} else {
 			$sql .= ' AND t.rowid = ' . $id;
 		}
-
+                //var_dump($sql);
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			$numrows = $this->db->num_rows($resql);

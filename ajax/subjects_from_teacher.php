@@ -53,7 +53,7 @@ foreach ($subjects as $e) {
     $event = new Event($e);
     $event->id=$e->rowid;
     $event->title=$e->subject_label;
-    $event->properties['group']=$e->group_label;
+    $event->properties['group']=$e->group_label.'-'.$langs->trans('EducoShortWorkingDay'.$e->workingday);
     $event->setStart($e->datep);
     $event->setEnd($e->datef);
     //$event->SyncWeek();

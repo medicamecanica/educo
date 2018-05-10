@@ -69,6 +69,7 @@ $toselect = GETPOST('toselect', 'array');
 
 $id = GETPOST('id', 'int');
 $academicid = GETPOST('academicid', 'int');
+$level = is_numeric(GETPOST('level', 'int')) ? GETPOST('level', 'int') : 0;
 
 $object = new Educopensum($db);
 //academic
@@ -140,8 +141,6 @@ if (empty($reshook)) {
             $ret = $object->fetch($id, $ref);
         $action = '';
     }
-
-   
 }
 
 // Initialize technical object to manage context to save list fields
@@ -165,13 +164,15 @@ if (empty($user->socid))
 
 // Definition of fields for list
 $arrayfields = array(
-   // 't.ref' => array('label' => $langs->trans("Fieldref"), 'checked' => 1),
+    // 't.ref' => array('label' => $langs->trans("Fieldref"), 'checked' => 1),
     't.grado_code' => array('label' => $langs->trans("Fieldgrado_code"), 'checked' => 1),
     // 't.asignature_code' => array('label' => $langs->trans("Fieldasignature_code"), 'checked' => 1),
     'a.subject_label' => array('label' => $langs->trans("Fieldsubject_label"), 'checked' => 1),
     //'t.fk_academicyear' => array('label' => $langs->trans("Fieldfk_academicyear"), 'checked' => 1),
     't.horas' => array('label' => $langs->trans("Fieldhoras"), 'checked' => 1),
+    't.level' => array('label' => $langs->trans("Fieldlevel"), 'checked' => 1),
     't.statut' => array('label' => $langs->trans("Fieldstatut"), 'checked' => 1),
+    // 't.workingday' => array('label' => $langs->trans("Fieldworkingday"), 'checked' => 1),
     // 't.import_key' => array('label' => $langs->trans("Fieldimport_key"), 'checked' => 1),
     //'t.entity'=>array('label'=>$langs->trans("Entity"), 'checked'=>1, 'enabled'=>(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode))),
     't.datec' => array('label' => $langs->trans("DateCreationShort"), 'checked' => 0, 'position' => 500),
@@ -244,6 +245,7 @@ if (empty($reshook)) {
     $permtodelete = $user->rights->educo->delete;
     $uploaddir = $conf->educo->dir_output;
     include DOL_DOCUMENT_ROOT . '/core/actions_massactions.inc.php';
+
     include DOL_DOCUMENT_ROOT . '/educo/tpl/actions_pensum.inc.php';
 }
 
@@ -265,19 +267,7 @@ $title = $langs->trans('PensumListTitle');
 
 // Put here content of your page
 // Example : Adding jquery code
-print '<script type="text/javascript" language="javascript">
-jQuery(document).ready(function() {
-	function init_myfunc()
-	{
-		jQuery("#myid").removeAttr(\'disabled\');
-		jQuery("#myid").attr(\'disabled\',\'disabled\');
-	}
-	init_myfunc();
-	jQuery("#mybutton").click(function() {
-		init_myfunc();
-	});
-});
-</script>';
+
 
 
 $sql = "SELECT";
@@ -292,7 +282,9 @@ $sql .= " t.date_create,";
 $sql .= " t.tms,";
 $sql .= " t.statut,";
 $sql .= " t.import_key,";
-$sql .= " a.label as subject_label";
+$sql .= " a.label as subject_label,";
+$sql .= " t.level,";
+$sql .= " t.workingday";
 
 
 // Add fields from extrafields
@@ -307,7 +299,7 @@ $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "edcuo_c_asignatura a ON a.code=t.asign
 if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
     $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "educo_pensum_extrafields as ef on (t.rowid = ef.fk_object)";
 $sql .= " WHERE 1 = 1";
-$sql .= " AND t.fk_academicyear =".$academicid;
+$sql .= " AND t.fk_academicyear =" . $academicid;
 //$sql.= " WHERE u.entity IN (".getEntity('mytable',1).")";
 
 if ($search_ref)
@@ -373,7 +365,21 @@ if ($num == 1 && !empty($conf->global->MAIN_SEARCH_DIRECT_OPEN_IF_ONLY_ONE) && $
 }
 
 llxHeader('', $title, $help_url);
-
+print '<script type="text/javascript" language="javascript">
+$(document).ready(function() {
+	function init_myfunc()
+	{
+		$("#myid").removeAttr(\'disabled\');
+		$("#myid").attr(\'disabled\',\'disabled\');
+	}
+	init_myfunc();
+	$("#level").change(function() {
+        console.log("<>");
+                $("input[name=\'action\']").val("create");
+		$("#formcreate").submit();
+	});
+});
+</script>';
 $arrayofselected = is_array($toselect) ? $toselect : array();
 
 $param = '';
@@ -405,7 +411,7 @@ if ($massaction == 'presend')
     $arrayofmassactions = array();
 $massactionbutton = $form->selectMassAction('', $arrayofmassactions);
 
-    dol_fiche_head($head, 'pensum', $langs->trans("AcademicYearCard"), 0, 'generic');
+dol_fiche_head($head, 'pensum', $langs->trans("AcademicYearCard"), 0, 'academic@educo');
 
 //baner
 print '<div class="arearef heightref valignmiddle" width="100%">';
@@ -426,7 +432,7 @@ print '<input type="hidden" name="action" value="list">';
 print '<input type="hidden" name="sortfield" value="' . $sortfield . '">';
 print '<input type="hidden" name="sortorder" value="' . $sortorder . '">';
 print '<input type="hidden" name="contextpage" value="' . $contextpage . '">';
-
+print '<input type="hidden" class="flat" name="academicid" value="'.$academicid.'">';
 //print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords, 'title_companies', 0, '', '', $limit);
 
 if ($sall) {
@@ -456,7 +462,6 @@ else
 $varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
 //tab academic
-
 //dol_fiche_head($head, 'pensum');
 
 
@@ -480,8 +485,13 @@ if (!empty($arrayfields['t.fk_academicyear']['checked']))
     print_liste_field_titre($arrayfields['t.fk_academicyear']['label'], $_SERVER['PHP_SELF'], 't.fk_academicyear', '', $params, '', $sortfield, $sortorder);
 if (!empty($arrayfields['t.horas']['checked']))
     print_liste_field_titre($arrayfields['t.horas']['label'], $_SERVER['PHP_SELF'], 't.horas', '', $params, '', $sortfield, $sortorder);
+
+if (!empty($arrayfields['t.level']['checked']))
+    print_liste_field_titre($arrayfields['t.level']['label'], $_SERVER['PHP_SELF'], 't.level', '', $params, '', $sortfield, $sortorder);
 if (!empty($arrayfields['t.statut']['checked']))
     print_liste_field_titre($arrayfields['t.statut']['label'], $_SERVER['PHP_SELF'], 't.statut', '', $params, '', $sortfield, $sortorder);
+if (!empty($arrayfields['t.workingday']['checked']))
+    print_liste_field_titre($arrayfields['t.workingday']['label'], $_SERVER['PHP_SELF'], 't.workingday', '', $params, '', $sortfield, $sortorder);
 if (!empty($arrayfields['t.import_key']['checked']))
     print_liste_field_titre($arrayfields['t.import_key']['label'], $_SERVER['PHP_SELF'], 't.import_key', '', $params, '', $sortfield, $sortorder);
 
@@ -531,6 +541,10 @@ if (!empty($arrayfields['t.fk_academicyear']['checked']))
 if (!empty($arrayfields['t.horas']['checked']))
     print '<td class="liste_titre"></td>';
 if (!empty($arrayfields['t.statut']['checked']))
+    print '<td class="liste_titre"></td>';
+if (!empty($arrayfields['t.level']['checked']))
+    print '<td class="liste_titre"></td>';
+if (!empty($arrayfields['t.workingday']['checked']))
     print '<td class="liste_titre"></td>';
 if (!empty($arrayfields['t.import_key']['checked']))
     print '<td class="liste_titre"><input type="text" class="flat" name="search_import_key" value="' . $search_import_key . '" size="10"></td>';
@@ -604,18 +618,20 @@ while ($i < min($num, $limit)) {
                 switch ($key) {
                     case 't.statut' : print '<td>';
                         if ($obj->statut) {
-                            print '<a name="'.$obj->rowid.'" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&action=update_status&id=' . $obj->rowid . '&statut=0#'.$obj->rowid .'">';
+                            print '<a name="' . $obj->rowid . '" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&action=update_status&id=' . $obj->rowid . '&statut=0#' . $obj->rowid . '">';
                             print img_picto($langs->trans("Enabled"), 'switch_on');
                             print '</a>';
                         } else {
-                            print '<a name="'.$obj->rowid.'" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&action=update_status&id=' . $obj->rowid . '&statut=1#'.$obj->rowid .'">';
+                            print '<a name="' . $obj->rowid . '" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&action=update_status&id=' . $obj->rowid . '&statut=1#' . $obj->rowid . '">';
                             print img_picto($langs->trans("Enabled"), 'switch_off');
                             print '</a>';
                         }
                         print '&nbsp;&nbsp;';
-                         print '<a name="'.$obj->rowid.'" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&action=confirm_delete&id=' . $obj->rowid . '">';
-                            print img_delete();
-                            print '</a>';
+
+                        break;
+                    case 't.level':
+                        print '<td>';
+                        print $langs->trans('Level' . $obj->level);
                         print "</td>";
                         break;
                     default :
@@ -672,7 +688,11 @@ while ($i < min($num, $limit)) {
             $selected = 0;
             if (in_array($obj->rowid, $arrayofselected))
                 $selected = 1;
-            print '<input id="cb' . $obj->rowid . '" class="flat checkforselect" type="checkbox" name="toselect[]" value="' . $obj->rowid . '"' . ($selected ? ' checked="checked"' : '') . '>';
+            //print '<input id="cb' . $obj->rowid . '" class="flat checkforselect" type="checkbox" name="toselect[]" value="' . $obj->rowid . '"' . ($selected ? ' checked="checked"' : '') . '>';
+            print '<a name="' . $obj->rowid . '" href="' . $_SERVER["PHP_SELF"] . '?academicid=' . $academicid . '&action=confirm_delete&id=' . $obj->rowid . '">';
+            print img_delete();
+            print '</a>';
+            print "</td>";
         }
         print '</td>';
         if (!$i)

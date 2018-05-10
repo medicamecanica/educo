@@ -54,6 +54,9 @@ if ($action == 'create') {
 //print '<tr><td class="fieldrequired">'.$langs->trans("Fieldref").'</td><td><input class="flat" type="text" name="ref" value="'.GETPOST('ref').'"></td></tr>';
 //print '<tr><td class="fieldrequired">'.$langs->trans("Fieldlabel").'</td><td><input class="flat" type="text" name="label" value="'.GETPOST('label').'"></td></tr>';
 //print '<tr><td class="fieldrequired">'.$langs->trans("Fieldfk_academicyear").'</td><td><input class="flat" type="text" name="fk_academicyear" value="'.GETPOST('fk_academicyear').'"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("FieldWorkingDay") . '</td><td>';
+    print $formeduco->select_workingday('workingday', $object->workingday, 1);
+    print '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldgrado_code") . '</td><td>';
     print $formeduco->select_dictionary('grado_code', 'educo_c_grado', 'code', 'label', $grado_code, 1) . '</td></tr>';
     print '</td></tr>';

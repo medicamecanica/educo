@@ -66,6 +66,10 @@ class Educopensum extends CommonObject
 	public $import_key;
 	public $asignature_code;
 	public $grado_code;
+	public $entity;
+	public $llx_educo_pensumcol;
+	public $level;
+	public $workingday;
 
 	/**
 	 */
@@ -118,6 +122,18 @@ class Educopensum extends CommonObject
 		if (isset($this->grado_code)) {
 			 $this->grado_code = trim($this->grado_code);
 		}
+		if (isset($this->entity)) {
+			 $this->entity = trim($this->entity);
+		}
+		if (isset($this->llx_educo_pensumcol)) {
+			 $this->llx_educo_pensumcol = trim($this->llx_educo_pensumcol);
+		}
+		if (isset($this->level)) {
+			 $this->level = trim($this->level);
+		}
+		if (isset($this->workingday)) {
+			 $this->workingday = trim($this->workingday);
+		}
 
 		
 
@@ -127,7 +143,6 @@ class Educopensum extends CommonObject
 		// Insert request
 		$sql = 'INSERT INTO ' . MAIN_DB_PREFIX . $this->table_element . '(';
 		
-		$sql.= 'rowid,';
 		$sql.= 'ref,';
 		$sql.= 'fk_academicyear,';
 		$sql.= 'horas,';
@@ -135,12 +150,15 @@ class Educopensum extends CommonObject
 		$sql.= 'statut,';
 		$sql.= 'import_key,';
 		$sql.= 'asignature_code,';
-		$sql.= 'grado_code';
+		$sql.= 'grado_code,';
+		$sql.= 'entity,';
+		$sql.= 'llx_educo_pensumcol,';
+		$sql.= 'level,';
+		$sql.= 'workingday';
 
 		
 		$sql .= ') VALUES (';
 		
-		$sql .= ' '.(! isset($this->id)?'NULL':$this->id).',';
 		$sql .= ' '.(! isset($this->ref)?'NULL':"'".$this->db->escape($this->ref)."'").',';
 		$sql .= ' '.(! isset($this->fk_academicyear)?'NULL':$this->fk_academicyear).',';
 		$sql .= ' '.(! isset($this->horas)?'NULL':$this->horas).',';
@@ -148,13 +166,17 @@ class Educopensum extends CommonObject
 		$sql .= ' '.(! isset($this->statut)?'NULL':$this->statut).',';
 		$sql .= ' '.(! isset($this->import_key)?'NULL':"'".$this->db->escape($this->import_key)."'").',';
 		$sql .= ' '.(! isset($this->asignature_code)?'NULL':"'".$this->db->escape($this->asignature_code)."'").',';
-		$sql .= ' '.(! isset($this->grado_code)?'NULL':"'".$this->db->escape($this->grado_code)."'");
+		$sql .= ' '.(! isset($this->grado_code)?'NULL':"'".$this->db->escape($this->grado_code)."'").',';
+		$sql .= ' '.(! isset($this->entity)?'NULL':$this->entity).',';
+		$sql .= ' '.(! isset($this->llx_educo_pensumcol)?'NULL':"'".$this->db->escape($this->llx_educo_pensumcol)."'").',';
+		$sql .= ' '.(! isset($this->level)?'NULL':$this->level).',';
+		$sql .= ' '.(! isset($this->workingday)?'NULL':$this->workingday);
 
 		
 		$sql .= ')';
 
 		$this->db->begin();
-               // var_dump($sql);
+
 		$resql = $this->db->query($sql);
 		if (!$resql) {
 			$error ++;
@@ -211,7 +233,11 @@ class Educopensum extends CommonObject
 		$sql .= " t.statut,";
 		$sql .= " t.import_key,";
 		$sql .= " t.asignature_code,";
-		$sql .= " t.grado_code";
+		$sql .= " t.grado_code,";
+		$sql .= " t.entity,";
+		$sql .= " t.llx_educo_pensumcol,";
+		$sql .= " t.level,";
+		$sql .= " t.workingday";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
@@ -242,6 +268,10 @@ class Educopensum extends CommonObject
 				$this->import_key = $obj->import_key;
 				$this->asignature_code = $obj->asignature_code;
 				$this->grado_code = $obj->grado_code;
+				$this->entity = $obj->entity;
+				$this->llx_educo_pensumcol = $obj->llx_educo_pensumcol;
+				$this->level = $obj->level;
+				$this->workingday = $obj->workingday;
 
 				
 			}
@@ -297,7 +327,11 @@ class Educopensum extends CommonObject
 		$sql .= " t.statut,";
 		$sql .= " t.import_key,";
 		$sql .= " t.asignature_code,";
-		$sql .= " t.grado_code";
+		$sql .= " t.grado_code,";
+		$sql .= " t.entity,";
+		$sql .= " t.llx_educo_pensumcol,";
+		$sql .= " t.level,";
+		$sql .= " t.workingday";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element. ' as t';
@@ -343,6 +377,10 @@ class Educopensum extends CommonObject
 				$line->import_key = $obj->import_key;
 				$line->asignature_code = $obj->asignature_code;
 				$line->grado_code = $obj->grado_code;
+				$line->entity = $obj->entity;
+				$line->llx_educo_pensumcol = $obj->llx_educo_pensumcol;
+				$line->level = $obj->level;
+				$line->workingday = $obj->workingday;
 
 				
 
@@ -396,6 +434,18 @@ class Educopensum extends CommonObject
 		if (isset($this->grado_code)) {
 			 $this->grado_code = trim($this->grado_code);
 		}
+		if (isset($this->entity)) {
+			 $this->entity = trim($this->entity);
+		}
+		if (isset($this->llx_educo_pensumcol)) {
+			 $this->llx_educo_pensumcol = trim($this->llx_educo_pensumcol);
+		}
+		if (isset($this->level)) {
+			 $this->level = trim($this->level);
+		}
+		if (isset($this->workingday)) {
+			 $this->workingday = trim($this->workingday);
+		}
 
 		
 
@@ -405,7 +455,6 @@ class Educopensum extends CommonObject
 		// Update request
 		$sql = 'UPDATE ' . MAIN_DB_PREFIX . $this->table_element . ' SET';
 		
-		$sql .= ' rowid = '.(isset($this->id)?$this->id:"null").',';
 		$sql .= ' ref = '.(isset($this->ref)?"'".$this->db->escape($this->ref)."'":"null").',';
 		$sql .= ' fk_academicyear = '.(isset($this->fk_academicyear)?$this->fk_academicyear:"null").',';
 		$sql .= ' horas = '.(isset($this->horas)?$this->horas:"null").',';
@@ -414,7 +463,11 @@ class Educopensum extends CommonObject
 		$sql .= ' statut = '.(isset($this->statut)?$this->statut:"null").',';
 		$sql .= ' import_key = '.(isset($this->import_key)?"'".$this->db->escape($this->import_key)."'":"null").',';
 		$sql .= ' asignature_code = '.(isset($this->asignature_code)?"'".$this->db->escape($this->asignature_code)."'":"null").',';
-		$sql .= ' grado_code = '.(isset($this->grado_code)?"'".$this->db->escape($this->grado_code)."'":"null");
+		$sql .= ' grado_code = '.(isset($this->grado_code)?"'".$this->db->escape($this->grado_code)."'":"null").',';
+		$sql .= ' entity = '.(isset($this->entity)?$this->entity:"null").',';
+		$sql .= ' llx_educo_pensumcol = '.(isset($this->llx_educo_pensumcol)?"'".$this->db->escape($this->llx_educo_pensumcol)."'":"null").',';
+		$sql .= ' level = '.(isset($this->level)?$this->level:"null").',';
+		$sql .= ' workingday = '.(isset($this->workingday)?$this->workingday:"null");
 
         
 		$sql .= ' WHERE rowid=' . $this->id;
@@ -684,6 +737,10 @@ class Educopensum extends CommonObject
 		$this->import_key = '';
 		$this->asignature_code = '';
 		$this->grado_code = '';
+		$this->entity = '';
+		$this->llx_educo_pensumcol = '';
+		$this->level = '';
+		$this->workingday = '';
 
 		
 	}
@@ -712,6 +769,10 @@ class EducopensumLine
 	public $import_key;
 	public $asignature_code;
 	public $grado_code;
+	public $entity;
+	public $llx_educo_pensumcol;
+	public $level;
+	public $workingday;
 
 	/**
 	 * @var mixed Sample line property 2

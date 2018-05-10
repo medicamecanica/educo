@@ -65,6 +65,8 @@ class Educoacadyear extends CommonObject
 	public $note_private;
 	public $note_public;
 	public $status;
+	public $entity;
+	public $fk_project;
 
 	/**
 	 */
@@ -108,6 +110,12 @@ class Educoacadyear extends CommonObject
 		if (isset($this->status)) {
 			 $this->status = trim($this->status);
 		}
+		if (isset($this->entity)) {
+			 $this->entity = trim($this->entity);
+		}
+		if (isset($this->fk_project)) {
+			 $this->fk_project = trim($this->fk_project);
+		}
 
 		
 
@@ -123,7 +131,9 @@ class Educoacadyear extends CommonObject
 		$sql.= 'datec,';
 		$sql.= 'note_private,';
 		$sql.= 'note_public,';
-		$sql.= 'status';
+		$sql.= 'status,';
+		$sql.= 'entity';
+		$sql.= 'fk_project';
 
 		
 		$sql .= ') VALUES (';
@@ -134,7 +144,9 @@ class Educoacadyear extends CommonObject
 		$sql .= ' '."'".$this->db->idate(dol_now())."'".',';
 		$sql .= ' '.(! isset($this->note_private)?'NULL':"'".$this->db->escape($this->note_private)."'").',';
 		$sql .= ' '.(! isset($this->note_public)?'NULL':"'".$this->db->escape($this->note_public)."'").',';
-		$sql .= ' '.(! isset($this->status)?'NULL':$this->status);
+		$sql .= ' '.(! isset($this->status)?'NULL':$this->status).',';
+		$sql .= ' '.(! isset($this->entity)?'NULL':$this->entity).',';
+		$sql .= ' '.(! isset($this->fk_project)?'NULL':$this->fk_project);
 
 		
 		$sql .= ')';
@@ -196,7 +208,9 @@ class Educoacadyear extends CommonObject
 		$sql .= " t.tms,";
 		$sql .= " t.note_private,";
 		$sql .= " t.note_public,";
-		$sql .= " t.status";
+		$sql .= " t.status,";
+		$sql .= " t.entity,";
+		$sql .= " t.fk_project";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
@@ -226,6 +240,78 @@ class Educoacadyear extends CommonObject
 				$this->note_private = $obj->note_private;
 				$this->note_public = $obj->note_public;
 				$this->status = $obj->status;
+				$this->entity = $obj->entity;
+				$this->fk_project = $obj->fk_project;
+
+				
+			}
+			
+			// Retrieve all extrafields for invoice
+			// fetch optionals attributes and labels
+			require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+			$extrafields=new ExtraFields($this->db);
+			$extralabels=$extrafields->fetch_name_optionals_label($this->table_element,true);
+			$this->fetch_optionals($this->id,$extralabels);
+
+			// $this->fetch_lines();
+			
+			$this->db->free($resql);
+
+			if ($numrows) {
+				return 1;
+			} else {
+				return 0;
+			}
+		} else {
+			$this->errors[] = 'Error ' . $this->db->lasterror();
+			dol_syslog(__METHOD__ . ' ' . implode(',', $this->errors), LOG_ERR);
+
+			return - 1;
+		}
+	}
+        /**
+	 * Load object in memory from the database
+	 *
+	 * @param int    $id  Id object
+	 * @param string $ref Ref
+	 *
+	 * @return int <0 if KO, 0 if not found, >0 if OK
+	 */
+	public function fetchMax()
+	{
+		dol_syslog(__METHOD__, LOG_DEBUG);
+
+		$sql = 'SELECT';
+		$sql .= ' MAX(t.rowid) as rowid';
+		
+
+		
+		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
+		$sql.= ' WHERE 1 = 1';
+                $sql.= ' and status >0';
+		if (! empty($conf->multicompany->enabled)) {
+		    $sql .= " AND entity IN (" . getEntity("educoacadyear", 1) . ")";
+		}
+		
+
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$numrows = $this->db->num_rows($resql);
+			if ($numrows) {
+				$obj = $this->db->fetch_object($resql);
+
+				$this->id = $obj->rowid;
+				
+				$this->ref = $obj->ref;
+				$this->datestart = $this->db->jdate($obj->datestart);
+				$this->dateend = $this->db->jdate($obj->dateend);
+				$this->datec = $this->db->jdate($obj->datec);
+				$this->tms = $this->db->jdate($obj->tms);
+				$this->note_private = $obj->note_private;
+				$this->note_public = $obj->note_public;
+				$this->status = $obj->status;
+				$this->entity = $obj->entity;
+				$this->fk_project = $obj->fk_project;
 
 				
 			}
@@ -266,7 +352,7 @@ class Educoacadyear extends CommonObject
 	 *
 	 * @return int <0 if KO, >0 if OK
 	 */
-	public function fetchAll($sortorder='', $sortfield='', $limit=0, $offset=0, array $filter = array(), $filtermode='AND')
+	public function fetchAll($withactive='-1',$sortorder='', $sortfield='', $limit=0, $offset=0, array $filter = array(), $filtermode='AND')
 	{
 		dol_syslog(__METHOD__, LOG_DEBUG);
 
@@ -280,7 +366,9 @@ class Educoacadyear extends CommonObject
 		$sql .= " t.tms,";
 		$sql .= " t.note_private,";
 		$sql .= " t.note_public,";
-		$sql .= " t.status";
+		$sql .= " t.status,";
+		$sql .= " t.entity,";
+		$sql .= " t.fk_project";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element. ' as t';
@@ -293,6 +381,8 @@ class Educoacadyear extends CommonObject
 			}
 		}
 		$sql.= ' WHERE 1 = 1';
+                 if($withactive>=0)
+                    $sql.= ' AND  t.status > 0';
 		if (! empty($conf->multicompany->enabled)) {
 		    $sql .= " AND entity IN (" . getEntity("educoacadyear", 1) . ")";
 		}
@@ -325,6 +415,8 @@ class Educoacadyear extends CommonObject
 				$line->note_private = $obj->note_private;
 				$line->note_public = $obj->note_public;
 				$line->status = $obj->status;
+				$line->entity = $obj->entity;
+				$line->fk_project = $obj->fk_project;
 
 				
 
@@ -369,6 +461,12 @@ class Educoacadyear extends CommonObject
 		if (isset($this->status)) {
 			 $this->status = trim($this->status);
 		}
+		if (isset($this->entity)) {
+			 $this->entity = trim($this->entity);
+		}
+		if (isset($this->fk_project)) {
+			 $this->fk_project = trim($this->fk_project);
+		}
 
 		
 
@@ -385,7 +483,9 @@ class Educoacadyear extends CommonObject
 		$sql .= ' tms = '.(dol_strlen($this->tms) != 0 ? "'".$this->db->idate($this->tms)."'" : "'".$this->db->idate(dol_now())."'").',';
 		$sql .= ' note_private = '.(isset($this->note_private)?"'".$this->db->escape($this->note_private)."'":"null").',';
 		$sql .= ' note_public = '.(isset($this->note_public)?"'".$this->db->escape($this->note_public)."'":"null").',';
-		$sql .= ' status = '.(isset($this->status)?$this->status:"null");
+		$sql .= ' status = '.(isset($this->status)?$this->status:"null").',';
+		$sql .= ' entity = '.(isset($this->entity)?$this->entity:"null").',';
+		$sql .= ' fk_project = '.(isset($this->fk_project)?$this->fk_project:"null");
 
         
 		$sql .= ' WHERE rowid=' . $this->id;
@@ -568,13 +668,12 @@ class Educoacadyear extends CommonObject
 
         if ($withpicto)
         {
-            $result.=($linkstart.img_object(($notooltip?'':$label), 'label', ($notooltip?'':'class="classfortooltip"')).$linkend);
+            $result.=($linkstart.img_object(($notooltip?'':$label), 'academic@educo', ($notooltip?'':'class="classfortooltip"')).$linkend);
             if ($withpicto != 2) $result.=' ';
 		}
 		$result.= $linkstart . $this->ref . $linkend;
 		return $result;
 	}
-
 	/**
 	 *  Retourne le libelle du status d'un user (actif, inactif)
 	 *
@@ -654,10 +753,38 @@ class Educoacadyear extends CommonObject
 		$this->note_private = '';
 		$this->note_public = '';
 		$this->status = '';
+		$this->entity = '';
+		$this->fk_project = '';
 
 		
 	}
+        public function fetchObjectLinked($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $clause = 'OR', $alsosametype = 1) {
+            parent::fetchObjectLinked($sourceid, $sourcetype, $targetid, $targettype, $clause, $alsosametype);
+             global $conf;
+            foreach ($this->linkedObjectsIds as $module => $objectids) {
 
+                $classpath = $this->element . '/class';
+                // Set classfile
+                $subelement = $module;
+                $classfile = strtolower($subelement);
+                $classname = ucfirst($subelement);
+                $module = $module == 'project' ? 'projet' : $module;
+                if ($conf->$module->enabled) {
+                    dol_include_once('/' . $classpath . '/' . $classfile . '.class.php');
+                    // print '/' . $classpath . '/' . $classfile . '.class.php ' . class_exists($classname);
+                    if (class_exists($classname)) {
+                        foreach ($objectids as $i => $objectid) { // $i is rowid into llx_element_element
+                            $obj = new $classname($this->db);
+                            $ret = $obj->fetch($objectid);
+
+                            if ($ret >= 0) {
+                                $this->linkedObjects[$obj->element][$i] = $obj;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 }
 
 /**
@@ -681,6 +808,8 @@ class EducoacadyearLine
 	public $note_private;
 	public $note_public;
 	public $status;
+	public $entity;
+	public $fk_project;
 
 	/**
 	 * @var mixed Sample line property 2

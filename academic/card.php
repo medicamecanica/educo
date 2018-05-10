@@ -48,7 +48,9 @@ if (!$res)
     die("Include of main fails");
 // Change this following line to use the correct relative path from htdocs
 include_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
+include_once(DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php');
 dol_include_once('/educo/class/educoacadyear.class.php');
+dol_include_once('/projet/class/project.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
 dol_include_once('/core/class/doleditor.class.php');
 // Load traductions files requiredby by page
@@ -57,6 +59,7 @@ $langs->load("other");
 
 // Get parameters
 $id = GETPOST('id', 'int');
+$projectid = GETPOST('projectid', 'int');
 $action = GETPOST('action', 'alpha');
 $cancel = GETPOST('cancel');
 $backtopage = GETPOST('backtopage');
@@ -64,8 +67,8 @@ $myparam = GETPOST('myparam', 'alpha');
 //$datestart = GETPOST('datestart', 'alpha');
 //$dateend = GETPOST('dateend', 'alpha');
 $datestart = dol_mktime(0, 0, 0, GETPOST('datestartmonth'), GETPOST('datestartday'), GETPOST('datestartyear'));
-        $dateend = dol_mktime(0, 0, 0, GETPOST('dateendmonth'), GETPOST('dateendday'), GETPOST('dateendyear'));
-        
+$dateend = dol_mktime(0, 0, 0, GETPOST('dateendmonth'), GETPOST('dateendday'), GETPOST('dateendyear'));
+
 $search_ref = GETPOST('search_ref', 'alpha');
 $search_note_private = GETPOST('search_note_private', 'alpha');
 $search_note_public = GETPOST('search_note_public', 'alpha');
@@ -85,6 +88,7 @@ if ($user->societe_id > 0) {
 
 $object = new Educoacadyear($db);
 $extrafields = new ExtraFields($db);
+$project = new Project($db);
 
 // fetch optionals attributes and labels
 $extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
@@ -114,11 +118,38 @@ if (empty($reshook)) {
             header("Location: " . $urltogo);
             exit;
         }
-        if ($id > 0 || !empty($ref))
+        if ($id > 0 || !empty($ref)) {
             $ret = $object->fetch($id, $ref);
+        }
         $action = '';
     }
-
+    if ($action == 'view' && $projectid > 0) {
+        $project = new Project($db);
+        $res = $project->fetch($projectid);
+        if ($res > 0) {
+            $object->add_object_linked($project->element, $projectid);
+        }
+    }
+    if ($action == 'delete_project' && $projectid > 0) {
+        $project = new Project($db);
+        $res = $project->fetch($projectid);
+        if ($res > 0) {
+            // $object->add_object_linked($project->element, $projectid);
+        }
+        // $object->fetch($id);
+       // $object->db->begin();
+        $result = $project->delete($user);
+        if ($result > 0) {
+             $project->deleteObjectLinked();
+            
+            setEventMessages($langs->trans("RecordDeleted"), null, 'mesgs');
+            
+        } else {
+            dol_syslog($object->error, LOG_DEBUG);
+            setEventMessages($object->error, $object->errors, 'errors');
+        }
+        $action='view';
+    }
     // Action to add record
     if ($action == 'add') {
         if (GETPOST('cancel')) {
@@ -139,6 +170,8 @@ if (empty($reshook)) {
         $object->status = 0;
         $object->datec = dol_now();
         $object->tms = dol_now();
+        $object->entity = $conf->entity;
+       // $object->fk_project = GETPOST('fk_project', 'int');
 
 
 
@@ -179,6 +212,7 @@ if (empty($reshook)) {
         $object->note_private = GETPOST('note_private', 'alpha');
         $object->note_public = GETPOST('note_public', 'alpha');
         $object->status = GETPOST('status', 'int');
+       // $object->fk_project = GETPOST('fk_project', 'int');
 
 
 
@@ -234,6 +268,7 @@ if (empty($reshook)) {
 llxHeader('', 'MyPageName', '');
 
 $form = new Form($db);
+$formProjets = new FormProjets($db);
 $head = academicyear_header($object);
 
 // Put here content of your page
@@ -272,6 +307,10 @@ if ($action == 'create') {
     print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_end") . '</td>'
             . '<td>';
     print $form->select_date($object->dateend, 'dateend') . '</td></tr>';
+//    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldproject") . '</td><td>';
+//    print $formProjets->select_projects(-1, $object->fk_project, 'fk_project');
+//
+//    print '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_private") . '</td><td>';
     $doleditor = new DolEditor("note_private", $object->note_private, '', 160, 'dolibarr_notes', '', false, true, 1, 3, 80);
     $doleditor->Create();
@@ -292,7 +331,8 @@ if ($action == 'create') {
 }
 
 
-
+if ($object->fk_project > 0)
+    $project->fetch($object->fk_project);
 // Part to edit record
 if (($id || $ref) && $action == 'edit') {
     //print load_fiche_titre($langs->trans("AcademicYear"));
@@ -302,7 +342,7 @@ if (($id || $ref) && $action == 'edit') {
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
     print '<input type="hidden" name="id" value="' . $object->id . '">';
 
-    dol_fiche_head($head, 'card', $langs->trans("AcademicYear"), 0, 'generic');
+    dol_fiche_head($head, 'card', $langs->trans("AcademicYear"), 0, 'academic@educo');
 
     print '<table class="border centpercent">' . "\n";
     print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_start") . '</td>'
@@ -322,7 +362,11 @@ if (($id || $ref) && $action == 'edit') {
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td>';
     print $form->selectarray('status', array(1 => $langs->trans('Active'), 0 => $langs->trans('Inactive')), $object->status);
 
-    print '</td></tr>';
+//    print '</td></tr>';
+//    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldproject") . '</td><td>';
+//    print $formProjets->select_projects(-1, $object->fk_project, 'fk_project');
+//
+//    print '</td></tr>';
 
     print '</table>';
 
@@ -344,7 +388,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
     //print load_fiche_titre($langs->trans("AcademicYear"));
 
-    dol_fiche_head($head, 'card', $langs->trans("AcademicYearCard"), 0, 'generic');
+    dol_fiche_head($head, 'card', $langs->trans("AcademicYearCard"), 0, 'academic@educo');
 
     if ($action == 'delete') {
         $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteAcademicYear'), $langs->trans('ConfirmDeleteAcademicYear'), 'confirm_delete', '', 0, 1);
@@ -355,14 +399,15 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td>'.$object->label.'</td></tr>';
     // 
     print '<tr><td class="fieldrequired" class="nowrap">' . $langs->trans("Fieldref") . '</td><td>' . $object->ref . '</td></tr>';
-     print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_start") . '</td>'
-             . '<td>' .dol_print_date($object->datestart) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_start") . '</td>'
+            . '<td>' . dol_print_date($object->datestart) . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fielddate_end") . '</td>'
-            . '<td>' .dol_print_date($object->dateend ). '</td></tr>';
-    
+            . '<td>' . dol_print_date($object->dateend) . '</td></tr>';
+
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_private") . '</td><td>' . $object->note_private . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldnote_public") . '</td><td>' . $object->note_public . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td>' . $object->getLibStatut(2) . '</td></tr>';
+//    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldproject") . '</td><td>' . $project->getNomUrl(1) . '</td></tr>';
 
     print '</table>';
 
@@ -380,7 +425,43 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
         if ($user->rights->educo->write) {
             print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=edit">' . $langs->trans("Modify") . '</a></div>' . "\n";
         }
+        if ($user->rights->educo->write) {
+            // $project_params =;
 
+            $project_params .= '?ref=CRON-' . $object->ref;
+            $project_params .= '&public=0';
+            $project_params .= ' &projectstart=' . dol_print_date($object->datestart, '%d/%m/%Y');
+            $project_params .= ' &projectstartday=' . dol_print_date($object->datestart, '%d');
+            $project_params .= '  &projectstartmonth=' . dol_print_date($object->datestart, '%m');
+            $project_params .= '  &projectstartyear=' . $object->ref;
+            $project_params .= ' &projectend=' . dol_print_date($object->dateend, '%d/%m/%Y');
+            $project_params .= '  &projectendday=' . dol_print_date($object->dateend, '%d');
+            $project_params .= '  &projectendmonth=' . dol_print_date($object->dateend, '%m');
+            $project_params .= '  &projectendyear=' . $object->ref;
+            $project_params .= '  &opp_status=1';
+            $project_params .= '  &opp_percent=0.00';
+            $project_params .= '  &opp_percent_not_set=1';
+            $project_params .= '  &token=' . $_SESSION['newtoken'];
+            $project_params .= '  &backtopage=' . urlencode($_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=view');
+            // $project_params['backtopage']=$backtopage;
+            $parts = parse_url($project_params);
+            parse_str($parts['query'], $query);
+            //$query['backtopage']=$backtopage;
+            print '<form  method="post" id="form_project" action="' . DOL_URL_ROOT . ('/projet/card.php?action=add') . '">';
+            foreach ($query as $k => $value) {
+                $value = (is_numeric($value) ? (int) $value : $value);
+                print '<input type="hidden" name="' . $k . '" value="' . trim($value) . '">';
+            }
+            print '</form>';
+
+            print '<script>' . "\n";
+            print '$(document).ready(function(){$("#addproject").click(function(e){' . "\n";
+            print '  e.preventDefault();';
+            print '  $("#form_project").submit(); ' . "\n";
+            print '});});';
+            print '</script>';
+            print '<div id="addproject" class="inline-block divButAction"><a class="butAction" href="#">' . $langs->trans("AddProject") . '</a></div>' . "\n";
+        }
         if ($user->rights->educo->delete) {
             print '<div class="inline-block divButAction"><a class="butActionDelete" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=delete">' . $langs->trans('Delete') . '</a></div>' . "\n";
         }
@@ -390,8 +471,11 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
     // Example 2 : Adding links to objects
     // Show links to link elements
-    //$linktoelem = $form->showLinkToObjectBlock($object, null, array('educoacadyear'));
-    //$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
+    // $object->fetchObjectLinked();
+    //var_dump($object->linkedObjectsIds);
+    // $linktoelem = $form->showLinkToObjectBlock($object, null, array('educoacadyear'));
+    // var_dump($object->linkedObjects);
+    $somethingshown = $form->showLinkedObjectBlock($object);
 }
 // End of page
 llxFooter();

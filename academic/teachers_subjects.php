@@ -65,6 +65,7 @@ $confirm = GETPOST('confirm', 'alpha');
 $toselect = GETPOST('toselect', 'array');
 
 $id = GETPOST('id', 'int');
+$level = empty(GETPOST('level'))?'0':GETPOST('level');
 $backtopage = GETPOST('backtopage');
 $myparam = GETPOST('myparam', 'alpha');
 include_once DOL_DOCUMENT_ROOT . '/educo/tpl/list_teachersubject_init.php';
@@ -75,7 +76,7 @@ $search_label = GETPOST('search_label', 'alpha');
 $search_status = GETPOST('search_status', 'int');
 $search_asignature_code = GETPOST('search_asignature_code', 'alpha');
 $search_fk_user = GETPOST('search_fk_user', 'int');
-$search_fk_academicyear = GETPOST('search_fk_academicyear', 'int');
+$search_fk_academicyear = $academicid;
 $search_entity = GETPOST('search_entity', 'int');
 $search_hours = GETPOST('search_hours', 'int');
 
@@ -132,6 +133,7 @@ $arrayfields = array(
 //'t.status'=>array('label'=>$langs->trans("Fieldstatus"), 'checked'=>1),
     't.fk_user' => array('label' => $langs->trans("Fieldfk_user"), 'checked' => 1),
     't.asignature_code' => array('label' => $langs->trans("Fieldasignature_code"), 'checked' => 1),
+    'a.subject_level' => array('label' => $langs->trans("Fieldlevel"), 'checked' => 1),
 //'t.fk_academicyear'=>array('label'=>$langs->trans("Fieldfk_academicyear"), 'checked'=>1),
 //'t.entity'=>array('label'=>$langs->trans("Fieldentity"), 'checked'=>1),
 //'t.hours'=>array('label'=>$langs->trans("Fieldhours"), 'checked'=>1),
@@ -246,7 +248,8 @@ $sql .= " t.hours,";
 $sql .= "u.login,";
 $sql .= "u.lastname,";
 $sql .= "u.firstname,";
-$sql .= "a.label as subject_label";
+$sql .= "a.label as subject_label,";
+$sql .= "a.level as subject_level";
                     
 
 // Add fields from extrafields
@@ -352,6 +355,11 @@ $(document).ready(function() {
 		$("#asignature_label").val($(this).select2("data").text);
                 //console.log($(this).select2("data").text);
 	});
+        $("#level").change(function() {
+        console.log("<>");
+                $("input[name=\'action\']").val("create");
+		$("#formcreate").submit();
+	});
 });
 </script>';
 $arrayofselected = is_array($toselect) ? $toselect : array();
@@ -384,7 +392,7 @@ if ($user->rights->educo->supprimer)
 if ($massaction == 'presend')
     $arrayofmassactions = array();
 $massactionbutton = $form->selectMassAction('', $arrayofmassactions);
-
+include DOL_DOCUMENT_ROOT . '/educo/tpl/list_teachersubject_create.php';
 print '<form method="POST" id="searchFormList" action="' . $_SERVER["PHP_SELF"] . '">';
 if ($optioncss != '')
     print '<input type="hidden" name="optioncss" value="' . $optioncss . '">';
@@ -394,6 +402,7 @@ print '<input type="hidden" name="action" value="list">';
 print '<input type="hidden" name="sortfield" value="' . $sortfield . '">';
 print '<input type="hidden" name="sortorder" value="' . $sortorder . '">';
 print '<input type="hidden" name="contextpage" value="' . $contextpage . '">';
+print '<input type="hidden" name="academicid" value="' . $academicid . '">';
 
 //print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords, 'title_companies', 0, '', '', $limit);
 
@@ -423,7 +432,7 @@ if (!empty($moreforfilter)) {
 
 $varpage = empty($contextpage) ? $_SERVER["PHP_SELF"] : $contextpage;
 $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage); // This also change content of $arrayfields
-include DOL_DOCUMENT_ROOT . '/educo/tpl/list_teachersubject_create.php';
+
 print '<div class="div-table-responsive">';
 print '<table class="tagtable liste' . ($moreforfilter ? " listwithfilterbefore" : "") . '">' . "\n";
 
@@ -484,6 +493,9 @@ if (!empty($arrayfields['t.entity']['checked']))
     print '<td class="liste_titre"><input type="text" class="flat" name="search_entity" value="' . $search_entity . '" size="10"></td>';
 if (!empty($arrayfields['t.hours']['checked']))
     print '<td class="liste_titre"><input type="text" class="flat" name="search_hours" value="' . $search_hours . '" size="10"></td>';
+if (!empty($arrayfields['a.subject_level']['checked']))
+    print '<td class="liste_titre"><input type="text" class="flat" name="search_subject_level" value="' . $search_subject_level. '" size="10"></td>';
+
 
 //if (! empty($arrayfields['t.field1']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_field1" value="'.$search_field1.'" size="10"></td>';
 //if (! empty($arrayfields['t.field2']['checked'])) print '<td class="liste_titre"><input type="text" class="flat" name="search_field2" value="'.$search_field2.'" size="10"></td>';
@@ -562,6 +574,16 @@ while ($i < min($num, $limit)) {
                         break;
                     case 't.asignature_code':
                         print '<td>' . $obj->subject_label . '</td>';
+                        break;
+                    case 'a.subject_level':
+                        print '<td>';
+                       $levels= explode(',',$obj->subject_level);
+                       $sep='';
+                       foreach ($levels as $l) {
+                           print $sep.$langs->trans('Level'.$l);
+                           $sep=', ';
+                       }
+                        print '</td>';
                         break;
                     default :      
                         print '<td>' . $obj->$key2 . '</td>';

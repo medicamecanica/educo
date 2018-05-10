@@ -79,8 +79,9 @@ $academic = new Educoacadyear($db);
 $grade = new Educocgrado($db);
 if ($academicid > 0 || !empty($ref))
     $ret = $academic->fetch($academicid, $ref);
-if (!empty($grado_code))
+if (!empty($grado_code)||$grado_code==='0')
     $ret = $grade->fetch('', $grado_code);
+//var_dump($grade->label);
 $head = academicyear_header($academic);
 //diccioonarios
 $formeduco = new FormEduco($db);
@@ -149,6 +150,7 @@ $arrayfields = array(
     //'t.ref' => array('label' => $langs->trans("Fieldref"), 'checked' => 1),
     //'t.sufix' => array('label' => $langs->trans("Fieldsufix"), 'checked' => 1),
     't.label' => array('label' => $langs->trans("Fieldlabel"), 'checked' => 1),
+    't.workingday' => array('label' => $langs->trans("Fieldworkingday"), 'checked' => 1),
         //'t.fk_academicyear' => array('label' => $langs->trans("Fieldfk_academicyear"), 'checked' => 1),
         // 't.grado_code' => array('label' => $langs->trans("Fieldgrado_code"), 'checked' => 1),
         //'t.statut' => array('label' => $langs->trans("Fieldstatut"), 'checked' => 1),
@@ -258,6 +260,7 @@ $sql .= " t.grado_code,";
 $sql .= " t.tms,";
 $sql .= " t.date_create,";
 $sql .= " t.statut,";
+$sql .= " t.workingday,";
 $sql .= " t.import_key";
 
 
@@ -429,7 +432,7 @@ $selectedfields = $form->multiSelectArrayWithCheckbox('selectedfields', $arrayfi
 
 //dol_fiche_head($head, 'groups');
 
-    dol_fiche_head($head, 'groups', $langs->trans("AcademicYearCard"), 0, 'generic');
+    dol_fiche_head($head, 'groups', $langs->trans("AcademicYearCard"), 0, 'academic@educo');
 
 //baner
 print '<div class="arearef heightref valignmiddle" width="100%">';
@@ -458,6 +461,9 @@ if (!empty($arrayfields['t.grado_code']['checked']))
     print_liste_field_titre($arrayfields['t.grado_code']['label'], $_SERVER['PHP_SELF'], 't.grado_code', '', $params, '', $sortfield, $sortorder);
 if (!empty($arrayfields['t.statut']['checked']))
     print_liste_field_titre($arrayfields['t.statut']['label'], $_SERVER['PHP_SELF'], 't.statut', '', $params, '', $sortfield, $sortorder);
+if (!empty($arrayfields['t.workingday']['checked']))
+    print_liste_field_titre($arrayfields['t.workingday']['label'], $_SERVER['PHP_SELF'], 't.workingday', '', $params, '', $sortfield, $sortorder);
+
 if (!empty($arrayfields['t.import_key']['checked']))
     print_liste_field_titre($arrayfields['t.import_key']['label'], $_SERVER['PHP_SELF'], 't.import_key', '', $params, '', $sortfield, $sortorder);
 
@@ -499,6 +505,8 @@ if (!empty($arrayfields['t.grado_code']['checked']))
     print '<td class="liste_titre"><input type="text" class="flat" name="search_grado_code" value="' . $search_grado_code . '" size="10"></td>';
 if (!empty($arrayfields['t.statut']['checked']))
     print '<td class="liste_titre"><input type="text" class="flat" name="search_statut" value="' . $search_statut . '" size="10"></td>';
+if (!empty($arrayfields['t.workingday']['checked']))
+    print '<td class="liste_titre"></td>';
 if (!empty($arrayfields['t.import_key']['checked']))
     print '<td class="liste_titre"><input type="text" class="flat" name="search_import_key" value="' . $search_import_key . '" size="10"></td>';
 
@@ -568,6 +576,9 @@ while ($i < min($num, $limit)) {
         foreach ($arrayfields as $key => $value) {
             if (!empty($arrayfields[$key]['checked'])) {
                 $key2 = str_replace('t.', '', $key);
+                if($key2=='workingday')
+                     print '<td>' . $langs->trans('EducoWorkingDay'.$obj->$key2) . '</td>';
+                    else
                 print '<td>' . $obj->$key2 . '</td>';
                 if (!$i)
                     $totalarray['nbfield'] ++;

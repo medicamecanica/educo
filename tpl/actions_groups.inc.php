@@ -27,18 +27,23 @@ if ($action == 'add'&&!GETPOST('cancel')) {
 
     /* object_prop_getpost_prop */
 
-    $object->ref = $academicid . '-' . GETPOST('grado_code', 'alpha') . '-' . GETPOST('sufix', 'alpha');
+    $object->ref = $academicid . '-' .$langs->trans('EducoShortWorkingDay'.$object->workingday).'-'. GETPOST('grado_code', 'alpha') . '-' . GETPOST('sufix', 'alpha');
     $object->sufix = GETPOST('sufix', 'alpha');
     $object->label = $grade->label . ' ' . GETPOST('sufix', 'alpha');
     $object->fk_academicyear = $academicid;
     $object->grado_code = GETPOST('grado_code', 'alpha');
     $object->statut = 1;
+    $object->workingday = GETPOST('workingday', 'int');
     $object->date_create = dol_now();
     //$object->import_key=GETPOST('import_key','alpha');
-
-
-
-    if (empty($object->grado_code)) {
+   // var_dump($grade);
+    //die();
+    if (empty($object->workingday)) {
+        $error++;
+        setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Fieldworkingday")), null, 'errors');
+    }
+    //var_dump($object->grado_code);
+    if (empty($object->grado_code)&&$object->grado_code!=='0') {
         $error++;
         setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Fieldgrado_code")), null, 'errors');
     }

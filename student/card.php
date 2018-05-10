@@ -48,6 +48,8 @@ if (!$res)
     die("Include of main fails");
 // Change this following line to use the correct relative path from htdocs
 include_once(DOL_DOCUMENT_ROOT . '/core/class/html.formcompany.class.php');
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+include_once(DOL_DOCUMENT_ROOT . '/educo/class/html.formeduco.class.php');
 dol_include_once('/educo/lib/educo.lib.php');
 dol_include_once('/educo/class/educostudent.class.php');
 require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
@@ -76,7 +78,7 @@ $id = GETPOST('id', 'int');
 $action = GETPOST('action', 'alpha');
 $cancel = GETPOST('cancel');
 $backtopage = GETPOST('backtopage');
-$myparam = GETPOST('myparam', 'alpha');
+$model = GETPOST('model', 'alpha');
 
 
 $search_ref = GETPOST('search_ref', 'alpha');
@@ -128,7 +130,7 @@ $parameters = array();
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action);    // Note that $action and $object may have been modified by some hooks
 if ($reshook < 0)
     setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
-$head= student_header($object);
+$head = student_header($object);
 if (empty($reshook)) {
     if ($cancel) {
         if ($action != 'addlink') {
@@ -160,6 +162,17 @@ if (empty($reshook)) {
         $object->lastname = GETPOST('lastname', 'alpha');
         $object->doc_type = GETPOST('doc_type', 'alpha');
         $object->document = GETPOST('document', 'alpha');
+        $object->cc = GETPOST('cc', 'alpha');
+        $object->sex = GETPOST('sex', 'int');
+        $object->neighborhood = GETPOST('neighborhood', 'alpha');
+        $object->blod_type = GETPOST('blod_type', 'alpha');
+        $object->grade_max = GETPOST('document', 'alpha');
+        $object->sisben = GETPOST('sisben', 'int');
+        $object->stratum = GETPOST('stratum', 'int');
+      //  var_dump($object->stratum);
+        $object->eps = GETPOST('eps', 'alpha');
+        $object->regime = GETPOST('regime', 'int');
+         $object->ethnicity = GETPOST('ethnicity', 'int');
         $object->entity = $conf->entity;
         $object->date_create = dol_now();
         $object->tms = dol_now();
@@ -175,15 +188,26 @@ if (empty($reshook)) {
 
         if (empty($object->firstname)) {
             $error++;
-            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("FieldFirstname")), null, 'errors');
+            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Fieldfirstname")), null, 'errors');
         }
         if (empty($object->lastname)) {
             $error++;
-            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("FieldLastname")), null, 'errors');
+            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Fieldlastname")), null, 'errors');
         }
-        if (empty($object->document)) {
+        if (empty($object->document)&&empty($object->cc)) {
             $error++;
-            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("FieldDocument")), null, 'errors');
+            if(empty(GETPOST('its_cc')))
+                setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Fielddocument")), null, 'errors');
+            else 
+                setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Fieldcc")), null, 'errors');
+        }
+        if (empty($object->stratum)) {
+            $error++;
+            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Fieldstratum")), null, 'errors');
+        }
+        if (empty($object->sisben)) {
+            $error++;
+            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Fieldsisben")), null, 'errors');
         }
         $db->begin();
 
@@ -269,8 +293,10 @@ if (empty($reshook)) {
                     setEventMessages(null, $object->errors, 'errors');
                 else
                     setEventMessages($object->error, null, 'errors');
-               // setEventMessages($object->db->lastquery, null, 'errors');
+                // setEventMessages($object->db->lastquery, null, 'errors');
+                var_dump($object->db->lastquery);
                 $action = 'create';
+                
             }
         }
         else {
@@ -292,10 +318,21 @@ if (empty($reshook)) {
         $object->lastname = GETPOST('lastname', 'alpha');
         $object->doc_type = GETPOST('doc_type', 'alpha');
         $object->document = GETPOST('document', 'alpha');
+         $object->cc = GETPOST('cc', 'alpha');
+        $object->sex = GETPOST('sex', 'int');
+        $object->neighborhood = GETPOST('neighborhood', 'alpha');
+        $object->blod_type = GETPOST('blod_type', 'alpha');
+        $object->grade_max = GETPOST('document', 'alpha');
+        $object->sisben = GETPOST('sisben', 'int');
+        $object->stratum =(float) GETPOST('stratum', 'int');
+        $object->eps = GETPOST('eps', 'alpha');
+        $object->regime = GETPOST('regime', 'int');
+         $object->ethnicity = GETPOST('ethnicity', 'int');
         //$object->entity = GETPOST('entity', 'int');
         //$object->fk_contact = GETPOST('fk_contact', 'int');
         // $object->fk_soc = GETPOST('fk_soc', 'int');
         $object->status = GETPOST('status', 'int');
+      //  var_dump($object);
         if (GETPOST('deletephoto'))
             $object->photo = '';
         elseif (!empty($_FILES['photo']['name']))
@@ -395,6 +432,11 @@ if (empty($reshook)) {
                 setEventMessages($object->error, null, 'errors');
         }
     }
+    // Actions to build doc
+	$upload_dir = $conf->educo->dir_output;
+	$permissioncreate=$user->rights->educo->read;
+      //  $object->modelpdf=$model;
+	include DOL_DOCUMENT_ROOT.'/core/actions_builddoc.inc.php';
 }
 
 
@@ -409,7 +451,8 @@ if (empty($reshook)) {
 llxHeader('', 'MyPageName', '');
 
 $form = new Form($db);
-
+$formfile = new FormFile($db);
+$formeduco = new FormEduco($db);
 
 // Put here content of your page
 // Example : Adding jquery code
@@ -424,6 +467,17 @@ jQuery(document).ready(function() {
 	jQuery("#mybutton").click(function() {
 		init_myfunc();
 	});
+         $("input[name=its_cc]").click(function() {
+                    if($(this).val()==1){
+                        $("#tr_cc").show("slow");
+                        $("#tr_othertype").hide("slow");
+                        $("#tr_othernum").hide("slow");
+                    }else{
+                        $("#tr_cc").hide("slow");
+                        $("#tr_othertype").show("slow");
+                        $("#tr_othernum").show("slow");
+                    }
+                 });
 });
 </script>';
 
@@ -448,7 +502,7 @@ if ($action == 'create') {
 }
 
 
-
+$hidestyle='style="display:none;"';
 // Part to edit record
 if (($id || $ref) && $action == 'edit') {
     print load_fiche_titre($langs->trans("Student"));
@@ -458,7 +512,7 @@ if (($id || $ref) && $action == 'edit') {
     print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
     print '<input type="hidden" name="id" value="' . $object->id . '">';
 
-    dol_fiche_head($head,'card',$langs->trans('Card'));
+    dol_fiche_head($head, 'card', $langs->trans('Card'));
 
     print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input class="flat" type="text" size="36" name="label" value="'.$label.'"></td></tr>';
@@ -467,11 +521,27 @@ if (($id || $ref) && $action == 'edit') {
     // print '<tr><td class="fieldrequired">' . $langs->trans("Fieldname") . '</td><td><input class="flat" type="text" name="name" value="' . $object->name . '"></td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfirstname") . '</td><td><input class="flat" type="text" name="firstname" value="' . $object->firstname . '"></td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldlastname") . '</td><td><input class="flat" type="text" name="lastname" value="' . $object->lastname . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddoc_type") . '</td><td><input class="flat" type="text" name="doc_type" value="' . $object->doc_type . '"></td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddocument") . '</td><td><input class="flat" type="text" name="document" value="' . $object->document . '"></td></tr>';
-    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td><input class="flat" type="text" name="entity" value="' . $object->entity . '"></td></tr>';
-    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_contact") . '</td><td><input class="flat" type="text" name="fk_contact" value="' . $object->fk_contact . '"></td></tr>';
-    // print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_soc") . '</td><td><input class="flat" type="text" name="fk_soc" value="' . $object->fk_soc . '"></td></tr>';
+    //select ceduala o other
+print '<tr><td class="fieldrequired">' . $langs->trans("") . '</td><td>';
+
+print '<input '.($object->cc?'checked':'').' class="flat" type="radio" name="its_cc" value="1"><labe for=its_cc"">'. $langs->trans("Fieldcc") .'</label>';
+print '&nbsp;&nbsp;&nbsp;&nbsp;<input  '.(!$object->cc?'checked':'disabled').' class="flat" type="radio" name="its_cc" value="0">'. $langs->trans("Other") .'</label>';
+print '</td></tr>';
+
+print '<tr id="tr_cc" '.(!$object->cc?$hidestyle:'').'><td class="fieldrequired">' . $langs->trans("Fieldcc") . '</td><td><input class="flat" type="text" name="cc" value="' . $object->cc . '"></td></tr>';
+print '<tr id="tr_othertype" '.($object->cc?$hidestyle:'').'><td class="fieldrequired">' . $langs->trans("Fielddoc_type") . '</td><td>' .$formeduco->select_doctype('doc_type', $object->doc_type,0)  . '</td></tr>';
+print '<tr id="tr_othernum" '.($object->cc?$hidestyle:'').'><td  class="fieldrequired">' . $langs->trans("Fielddocument") . '</td><td><input class="flat" type="text" name="document" value="' . $object->document . '"></td></tr>';
+
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsex") . '</td><td>' . $formeduco->select_sex('sex', $object->sex) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("FieldmaxGrade") . '</td><td><input class="flat" type="number" name="grade_max" value="' . $object->grade_max . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldneighborhood") . '</td><td><input  class="flat" type="text" name="neighborhood" value="' . $object->neighborhood . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldblood_type") . '</td><td><input size="4" class="flat" type="text" name="blod_type" value="' . $object->blod_type . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstratum") . '</td><td><input size="4" class="flat" type="number" name="stratum" value="' . $object->stratum . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsisben") . '</td><td><input size="4" class="flat" type="number" name="sisben" value="' . $object->sisben . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldeps") . '</td><td><input class="flat" type="text" name="eps" value="' . $object->eps . '"></td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldregime") . '</td><td>' . $formeduco->select_regime('regime', $object->regime) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldethnicity") . '</td><td>' . $formeduco->select_ethnicity('ethnicity', $object->ethnicity) . '</td></tr>';
+
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td><td>'
             . $form->selectarray('status', array(1 => $langs->trans('Enabled'), 0 => $langs->trans('Disable')), $object->status)
             . '</td></tr>';
@@ -512,9 +582,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     $contact->fetch($object->fk_contact);
 
 
-   // print load_fiche_titre($langs->trans("Student"));
+    // print load_fiche_titre($langs->trans("Student"));
 
-    dol_fiche_head($head,'card',$langs->trans('Student'),0,'generic');
+    dol_fiche_head($head, 'card', $langs->trans('Student'), 0, 'student@educo');
 
     if ($action == 'delete') {
         $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteStudent'), $langs->trans('ConfirmDeleteStudent'), 'confirm_delete', '', 0, 1);
@@ -524,7 +594,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     print '<table class="border centpercent">' . "\n";
     // print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td>'.$object->label.'</td></tr>';
     // Photo
-    print '<tr><td>' . $langs->trans("Photo") . '</td>';
+    print '<tr><td width="35%">' . $langs->trans("Photo") . '</td>';
     print '<td class="hideonsmartphone" valign="middle">';
     //$object->photo = 'photo.png';
     print $form->showphoto('educo', $object) . "\n";
@@ -534,12 +604,26 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     // print '<tr><td class="fieldrequired">' . $langs->trans("Fieldname") . '</td><td>' . $object->name . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfirstname") . '</td><td>' . $object->firstname . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldlastname") . '</td><td>' . $object->lastname . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddoc_type") . '</td>'
-            . '<td>' . $langs->trans($object->doc_type) . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fielddocument") . '</td><td>' . $object->document . '</td></tr>';
-    //print '<tr><td class="fieldrequired">' . $langs->trans("Fieldentity") . '</td><td>' . $object->entity . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_contact") . '</td><td>' . $soc->getNomUrl(1) . '</td></tr>';
-    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldfk_soc") . '</td><td>' . $contact->getNomUrl(1) . '</td></tr>';
+    print '<tr '.(!$object->cc?$hidestyle:'').'><td class="fieldrequired">' . $langs->trans("Fieldcc") . '</td><td>' . $object->cc . '</td></tr>';
+    // print '<tr><td class="fieldrequired">' . $langs->trans("Fielddoc_type") . '</td>'
+    //       . '<td>' . $langs->trans($object->doc_type) . '</td></tr>';
+    print '<tr '.($object->cc?$hidestyle:'').'><td class="fieldrequired">' . $langs->trans($object->doc_type)  . '</td><td>'  . $object->document . '</td></tr>';
+
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsex") . '</td><td>' . $langs->trans("Sex" . $object->sex) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Birthday") . '</td><td>' . dol_print_date($contact->birthday) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Age") . '</td><td>' . student_age($contact->birthday,$objec->cc) . '</td></tr>';
+    
+    print '<tr><td class="fieldrequired">' . $langs->trans("FieldmaxGrade") . '</td><td>' . $object->grade_max . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldneighborhood") . '</td><td>' . $object->neighborhood . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldblood_type") . '</td><td>' . $object->blod_type . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstratum") . '</td><td>' . $object->stratum . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldsisben") . '</td><td>' . $object->sisben . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldeps") . '</td><td>' . $object->eps . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldregime") . '</td><td>' . $langs->trans("Regime" . $object->regime) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Fieldethnicity") . '</td><td>' . $langs->trans("Ethnicity" . $object->ethnicity) . '</td></tr>';
+
+    print '<tr><td class="fieldrequired">' . $langs->trans("Responsible") . '</td><td>' . $soc->getNomUrl(1) . '</td></tr>';
+    print '<tr><td class="fieldrequired">' . $langs->trans("Contact") . '</td><td>' . $contact->getNomUrl(1) . '</td></tr>';
     print '<tr><td class="fieldrequired">' . $langs->trans("Fieldstatus") . '</td>'
             . '<td>' . $object->getLibStatut(2) . '</td></tr>';
 
@@ -568,12 +652,44 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     }
     print '</div>' . "\n";
 
+print '<div class="fichecenter"><div class="fichehalfleft">';
+		print '<a name="builddoc"></a>'; // ancre
 
+		// Documents generes
+		$filename = dol_sanitizeFileName('ref');
+		//$filename =  'tmp_cards.php';
+		//$filedir = $conf->adherent->dir_output . '/' . get_exdir($object->id, 2, 0, 0, $object, 'member') . dol_sanitizeFileName($object->ref);
+		$filedir = $conf->adherent->dir_output . '/' . get_exdir(0, 0, 0, 0, $object, 'member');
+		$urlsource = $_SERVER['PHP_SELF'] . '?id=' . $object->id;
+		$genallowed = $user->rights->adherent->creer;
+		$delallowed = $user->rights->adherent->supprimer;
+
+		print $formeduco->showdocuments('educo_student', $filename, $filedir, $urlsource, $genallowed, $delallowed, $object->modelpdf, 1, 0, 0, 28, 0, '', '', '', $object->default_lang, '', $object);
+		$somethingshown = $formfile->numoffiles;
+
+		// Show links to link elements
+		//$linktoelem = $form->showLinkToObjectBlock($object, null, array('subscription'));
+		//$somethingshown = $form->showLinkedObjectBlock($object, '');
+
+		// Show links to link elements
+		/*$linktoelem = $form->showLinkToObjectBlock($object,array('order'));
+		 if ($linktoelem) print ($somethingshown?'':'<br>').$linktoelem;
+
+		 // Link for paypal payment
+		 /*
+		 if (! empty($conf->paypal->enabled) && $object->statut != 0) {
+		 include_once DOL_DOCUMENT_ROOT . '/paypal/lib/paypal.lib.php';
+		 print showPaypalPaymentUrl('invoice', $object->ref);
+		 }
+		 */
+		print '</div><div class="fichehalfright"><div class="ficheaddleft">';
     // Example 2 : Adding links to objects
     // Show links to link elements
     //$linktoelem = $form->showLinkToObjectBlock($object, null, array('educostudent'));
     //$somethingshown = $form->showLinkedObjectBlock($object, $linktoelem);
 }
+
+
 
 
 // End of page

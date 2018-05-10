@@ -66,6 +66,8 @@ class Educogroup extends CommonObject
 	public $date_create = '';
 	public $statut;
 	public $import_key;
+	public $entity;
+	public $workingday;
 
 	/**
 	 */
@@ -118,6 +120,12 @@ class Educogroup extends CommonObject
 		if (isset($this->import_key)) {
 			 $this->import_key = trim($this->import_key);
 		}
+		if (isset($this->entity)) {
+			 $this->entity = trim($this->entity);
+		}
+		if (isset($this->workingday)) {
+			 $this->workingday = trim($this->workingday);
+		}
 
 		
 
@@ -134,7 +142,9 @@ class Educogroup extends CommonObject
 		$sql.= 'grado_code,';
 		$sql.= 'date_create,';
 		$sql.= 'statut,';
-		$sql.= 'import_key';
+		$sql.= 'import_key,';
+		$sql.= 'entity,';
+		$sql.= 'workingday';
 
 		
 		$sql .= ') VALUES (';
@@ -146,7 +156,9 @@ class Educogroup extends CommonObject
 		$sql .= ' '.(! isset($this->grado_code)?'NULL':"'".$this->db->escape($this->grado_code)."'").',';
 		$sql .= ' '.(! isset($this->date_create) || dol_strlen($this->date_create)==0?'NULL':"'".$this->db->idate($this->date_create)."'").',';
 		$sql .= ' '.(! isset($this->statut)?'NULL':$this->statut).',';
-		$sql .= ' '.(! isset($this->import_key)?'NULL':"'".$this->db->escape($this->import_key)."'");
+		$sql .= ' '.(! isset($this->import_key)?'NULL':"'".$this->db->escape($this->import_key)."'").',';
+		$sql .= ' '.(! isset($this->entity)?'NULL':$this->entity).',';
+		$sql .= ' '.(! isset($this->workingday)?'NULL':$this->workingday);
 
 		
 		$sql .= ')';
@@ -209,7 +221,9 @@ class Educogroup extends CommonObject
 		$sql .= " t.tms,";
 		$sql .= " t.date_create,";
 		$sql .= " t.statut,";
-		$sql .= " t.import_key";
+		$sql .= " t.import_key,";
+		$sql .= " t.entity,";
+		$sql .= " t.workingday";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
@@ -240,6 +254,8 @@ class Educogroup extends CommonObject
 				$this->date_create = $this->db->jdate($obj->date_create);
 				$this->statut = $obj->statut;
 				$this->import_key = $obj->import_key;
+				$this->entity = $obj->entity;
+				$this->workingday = $obj->workingday;
 
 				
 			}
@@ -267,7 +283,134 @@ class Educogroup extends CommonObject
 			return - 1;
 		}
 	}
+/**
+	 * Load object in memory from the database
+	 *
+	 * @param string $sortorder Sort Order
+	 * @param string $sortfield Sort field
+	 * @param int    $limit     offset limit
+	 * @param int    $offset    offset limit
+	 * @param array  $filter    filter array
+	 * @param string $filtermode filter mode (AND or OR)
+	 *
+	 * @return int <0 if KO, >0 if OK
+	 */
+	public function fetchStudents($pensumid='',$sortorder='', $sortfield='', $limit=0, $offset=0)
+	{
+		dol_syslog(__METHOD__, LOG_DEBUG);
 
+		$sql = 'SELECT';
+		$sql .= ' t.rowid,';
+		
+		$sql .= " t.ref,";
+		$sql .= " t.name,";
+		$sql .= " t.firstname,";
+		$sql .= " t.lastname,";
+		$sql .= " t.doc_type,";
+		$sql .= " t.document,";
+		$sql .= " t.entity,";
+		$sql .= " t.fk_contact,";
+		$sql .= " t.date_create,";
+		$sql .= " t.fk_soc,";
+		$sql .= " t.tms,";
+		$sql .= " t.status,";
+		$sql .= " t.import_key,";
+		$sql .= " t.grade_max,";
+		$sql .= " t.photo,";
+		$sql .= " t.sex,";
+		$sql .= " t.neighborhood,";
+		$sql .= " t.blod_type,";
+		$sql .= " t.stratum,";
+		$sql .= " t.sisben,";
+		$sql .= " t.regime,";
+		$sql .= " t.eps,";
+		$sql .= " t.ethnicity,";
+		$sql .= " t.cc";
+                if(!empty($pensumid)){
+                    for ($p = 1; $p< 5; $p++) {
+                      $sql .= ",(SELECT ";    
+                        $sql .= " sum(qe.status*qe.value/100) as p".$p;
+                        $sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_qualif_student as qe ';
+                        $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'educo_qualification q ';
+                        $sql .= ' ON q.rowid=qe.fk_qualification ';
+                        $sql .= ' AND q.fk_group='.$this->id;
+                        $sql .= ' AND q.fk_pensum='.$pensumid;
+                        $sql.='   WHERE t.rowid=qe.fk_student AND q.period='.$p;
+                        $sql .= ") as p".$p;      
+                    }   
+                }
+		
+		$sql .= ' FROM ' . MAIN_DB_PREFIX . 'educo_student as t';
+                $sql .= ' INNER JOIN  ' . MAIN_DB_PREFIX . 'educo_group_student e ON e.fk_estudiante= t.rowid';
+
+		
+		$sql.= ' WHERE e.fk_grupo ='.$this->id;
+		if (! empty($conf->multicompany->enabled)) {
+		    $sql .= " AND entity IN (" . getEntity("educostudent", 1) . ")";
+		}
+		
+		if (!empty($sortfield)) {
+			$sql .= $this->db->order($sortfield,$sortorder);
+		}
+		if (!empty($limit)) {
+		 $sql .=  ' ' . $this->db->plimit($limit + 1, $offset);
+		}
+
+		$this->lines = array();
+               // var_dump($sql);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			$num = $this->db->num_rows($resql);
+
+			while ($obj = $this->db->fetch_object($resql)) {
+				$line = new EducostudentLine();
+
+				$line->id = $obj->rowid;
+				
+				$line->ref = $obj->ref;
+				$line->name = $obj->name;
+				$line->firstname = $obj->firstname;
+				$line->lastname = $obj->lastname;
+				$line->doc_type = $obj->doc_type;
+				$line->document = $obj->document;
+				$line->entity = $obj->entity;
+				$line->fk_contact = $obj->fk_contact;
+				$line->date_create = $this->db->jdate($obj->date_create);
+				$line->fk_soc = $obj->fk_soc;
+				$line->tms = $this->db->jdate($obj->tms);
+				$line->status = $obj->status;
+				$line->import_key = $obj->import_key;
+				$line->grade_max = $obj->grade_max;
+				$line->photo = $obj->photo;
+				$line->sex = $obj->sex;
+				$line->neighborhood = $obj->neighborhood;
+				$line->blod_type = $obj->blod_type;
+				$line->stratum = $obj->stratum;
+				$line->sisben = $obj->sisben;
+				$line->regime = $obj->regime;
+				$line->eps = $obj->eps;
+				$line->ethnicity = $obj->ethnicity;
+				$line->cc = $obj->cc;
+                                
+                                $line->p1 = $obj->p1;
+                                $line->p2 = $obj->p2;
+                                $line->p3 = $obj->p3;
+                                $line->p4 = $obj->p4;
+
+				
+
+				$this->lines[$line->id] = $line;
+			}
+			$this->db->free($resql);
+
+			return $num;
+		} else {
+			$this->errors[] = 'Error ' . $this->db->lasterror();
+			dol_syslog(__METHOD__ . ' ' . implode(',', $this->errors), LOG_ERR);
+
+			return - 1;
+		}
+	}
 	/**
 	 * Load object in memory from the database
 	 *
@@ -295,7 +438,9 @@ class Educogroup extends CommonObject
 		$sql .= " t.tms,";
 		$sql .= " t.date_create,";
 		$sql .= " t.statut,";
-		$sql .= " t.import_key";
+		$sql .= " t.import_key,";
+		$sql .= " t.entity,";
+		$sql .= " t.workingday";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element. ' as t';
@@ -341,6 +486,8 @@ class Educogroup extends CommonObject
 				$line->date_create = $this->db->jdate($obj->date_create);
 				$line->statut = $obj->statut;
 				$line->import_key = $obj->import_key;
+				$line->entity = $obj->entity;
+				$line->workingday = $obj->workingday;
 
 				
 
@@ -394,6 +541,12 @@ class Educogroup extends CommonObject
 		if (isset($this->import_key)) {
 			 $this->import_key = trim($this->import_key);
 		}
+		if (isset($this->entity)) {
+			 $this->entity = trim($this->entity);
+		}
+		if (isset($this->workingday)) {
+			 $this->workingday = trim($this->workingday);
+		}
 
 		
 
@@ -411,7 +564,9 @@ class Educogroup extends CommonObject
 		$sql .= ' tms = '.(dol_strlen($this->tms) != 0 ? "'".$this->db->idate($this->tms)."'" : "'".$this->db->idate(dol_now())."'").',';
 		$sql .= ' date_create = '.(! isset($this->date_create) || dol_strlen($this->date_create) != 0 ? "'".$this->db->idate($this->date_create)."'" : 'null').',';
 		$sql .= ' statut = '.(isset($this->statut)?$this->statut:"null").',';
-		$sql .= ' import_key = '.(isset($this->import_key)?"'".$this->db->escape($this->import_key)."'":"null");
+		$sql .= ' import_key = '.(isset($this->import_key)?"'".$this->db->escape($this->import_key)."'":"null").',';
+		$sql .= ' entity = '.(isset($this->entity)?$this->entity:"null").',';
+		$sql .= ' workingday = '.(isset($this->workingday)?$this->workingday:"null");
 
         
 		$sql .= ' WHERE rowid=' . $this->id;
@@ -569,13 +724,11 @@ class Educogroup extends CommonObject
         $result = '';
         $companylink = '';
 
-        $label = '<u>' . $langs->trans("Group") . '</u>';
+        $label = '<u>' . $langs->trans("MyModule") . '</u>';
         $label.= '<br>';
         $label.= '<b>' . $langs->trans('Ref') . ':</b> ' . $this->ref;
-        $label.= '<br>';
-        $label.= '<b>' . $langs->trans('Name') . ':</b> ' . $this->label;
 
-        $url = DOL_URL_ROOT.'/educo/academic/groups.php?academicid='.$this->fk_academicyear.'&id='.$this->id;
+        $url = DOL_URL_ROOT.'/educo/'.$this->table_name.'_card.php?id='.$this->id;
         
         $linkclose='';
         if (empty($notooltip))
@@ -596,7 +749,7 @@ class Educogroup extends CommonObject
 
         if ($withpicto)
         {
-            $result.=($linkstart.img_object(($notooltip?'':$label), 'label', ($notooltip?'':'class="classfortooltip"')).$linkend);
+            $result.=($linkstart.img_object(($notooltip?'':$label), 'group@educo', ($notooltip?'':'class="classfortooltip"')).$linkend);
             if ($withpicto != 2) $result.=' ';
 		}
 		$result.= $linkstart . $this->label . $linkend;
@@ -683,6 +836,8 @@ class Educogroup extends CommonObject
 		$this->date_create = '';
 		$this->statut = '';
 		$this->import_key = '';
+		$this->entity = '';
+		$this->workingday = '';
 
 		
 	}
@@ -711,6 +866,8 @@ class EducogroupLine
 	public $date_create = '';
 	public $statut;
 	public $import_key;
+	public $entity;
+	public $workingday;
 
 	/**
 	 * @var mixed Sample line property 2

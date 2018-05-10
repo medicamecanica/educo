@@ -198,7 +198,7 @@ class Edcuocasignatura extends CommonObject
 		    $sql .= " AND entity IN (" . getEntity("edcuocasignatura", 1) . ")";
 		}
 		if (null !== $ref) {
-			$sql .= ' AND t.ref = ' . '\'' . $ref . '\'';
+			$sql .= ' AND t.code = ' . '\'' . $ref . '\'';
 		} else {
 			$sql .= ' AND t.rowid = ' . $id;
 		}

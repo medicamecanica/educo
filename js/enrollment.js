@@ -14,11 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-$(document).ready(function () {
+$(document).ready(function (e) {
+   
     var dol_url = $('#student_url').val();
+    var action;
+    switch ($("#action").val()) {
+        case 'add':
+            action = 'create';
+            break;
+        case 'update':
+            action = 'edit';
+            break;
+    }
     $('#academicid').change(function () {
-        $("#formcreate").attr("action", "?action=create");
-        $('#formcreate').submit();
+        $("#form").attr("action", "?action=" +action );
+        $('#form').submit();
     });
     $("#studentref").autocomplete({
         dataType: 'json',

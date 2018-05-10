@@ -91,11 +91,14 @@ class modEduco extends DolibarrModules {
         //							'dir' => array('output' => 'othermodulename'),      // To force the default directories names
         //							'workflow' => array('WORKFLOW_MODULE1_YOURACTIONTYPE_MODULE2'=>array('enabled'=>'! empty($conf->module1->enabled) && ! empty($conf->module2->enabled)', 'picto'=>'yourpicto@educo')) // Set here all workflow context managed by module
         //                        );
-        $this->module_parts = array();
+        $this->module_parts = array(
+            'hooks' => array('commonobject'),
+            'tpl' => array('/educo/tpl/project')
+            );
 
         // Data directories to create when module is enabled.
         // Example: this->dirs = array("/educo/temp");
-        $this->dirs = array("/educo/temp");
+        $this->dirs = array("/educo/temp","/educo/ratings");
 
         // Config pages. Put here list of php page, stored into educo/admin directory, to use to setup module.
         $this->config_page_url = array("mysetuppage.php@educo");
@@ -153,18 +156,20 @@ class modEduco extends DolibarrModules {
             $conf->educo->enabled = 0; // This is to avoid warnings
         $this->dictionaries = array(
             'langs' => 'educo@educo',
-            'tabname' => array(MAIN_DB_PREFIX . "educo_c_area", MAIN_DB_PREFIX . "edcuo_c_asignatura", MAIN_DB_PREFIX . "educo_c_grado"), // List of tables we want to see into dictonnary editor
-            'tablib' => array("Areas", "Asignaturas", "Grados"), // Label of tables
+            'tabname' => array(MAIN_DB_PREFIX . "educo_c_area", MAIN_DB_PREFIX . "edcuo_c_asignatura", MAIN_DB_PREFIX . "educo_c_grado", MAIN_DB_PREFIX . "educo_typerating"), // List of tables we want to see into dictonnary editor
+            'tablib' => array("Areas", "Asignaturas", "Grados","Esquemas de calificacion"), // Label of tables
             'tabsql' => array(
                 'SELECT f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'educo_c_area as f',
-                'SELECT f.code, f.label,f.fk_area, f.active FROM ' . MAIN_DB_PREFIX . 'edcuo_c_asignatura as f',
-                'SELECT f.code, f.label, f.active FROM ' . MAIN_DB_PREFIX . 'educo_c_grado as f'), // Request to select fields
-            'tabsqlsort' => array("code ASC", "fk_area,code ASC", "label ASC"), // Sort order
-            'tabfield' => array("code,label", "fk_area,code,label", "code,label"), // List of fields (result of select to show dictionary)
-            'tabfieldvalue' => array("code,label", "fk_area,code,label", "code,label"), // List of fields (list of fields to edit a record)
-            'tabfieldinsert' => array("code,label", "fk_area,code,label", "code,label"), // List of fields (list of fields for insert)
-            'tabrowid' => array("code", "rowid", "rowid"), // Name of columns with primary key (try to always name it 'rowid')
-            'tabcond' => array($conf->educo->enabled, $conf->educo->enabled, $conf->educo->enabled)            // Condition to show each dictionary
+                'SELECT f.level,f.code, f.label,f.fk_area, f.active FROM ' . MAIN_DB_PREFIX . 'edcuo_c_asignatura as f',
+                'SELECT f.code, f.label, f.level,f.active FROM ' . MAIN_DB_PREFIX . 'educo_c_grado as f',
+                'SELECT f.code, f.note, f.level,f.active FROM ' . MAIN_DB_PREFIX . 'educo_typerating as f'
+                ), // Request to select fields
+            'tabsqlsort' => array("code ASC", "level,fk_area,code ASC", "level,code ASC","level,code ASC"), // Sort order
+            'tabfield' => array("code,label", "level,fk_area,code,label", "code,label,level","code,note,level"), // List of fields (result of select to show dictionary)
+            'tabfieldvalue' => array("code,label", "level,fk_area,code,label", "code,label,level","code,note,level"), // List of fields (list of fields to edit a record)
+            'tabfieldinsert' => array("code,label", "level,fk_area,code,label", "code,label,level","code,note,level"), // List of fields (list of fields for insert)
+            'tabrowid' => array("code", "code", "code","code"), // Name of columns with primary key (try to always name it 'rowid')
+            'tabcond' => array($conf->educo->enabled, $conf->educo->enabled, $conf->educo->enabled,$conf->educo->enabled)            // Condition to show each dictionary
         );
         //
         // Boxes
@@ -359,10 +364,53 @@ class modEduco extends DolibarrModules {
             'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
             'perms' => '$user->rights->educo->read', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
             'target' => '',
-            'user' => 2);     
-
+            'user' => 2);   
+        $r++;
+        // Example to declare a Left Menu entry into an existing Top menu entry:
+        $this->menu[$r] = array('fk_menu' => 'fk_mainmenu=educo', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type' => 'left', // This is a Left menu entry
+            'titre' => 'Teacher',
+            'mainmenu' => 'educo',
+            'leftmenu' => 'teacher',
+            'url' => '/educo/teacher/index.php',
+            'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'position' => 1000 + $r,
+            'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+            'perms' => '$user->rights->educo->read', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'target' => '',
+            'user' => 2);                    // 0=Menu for internal users, 1=external users, 2=both
+        $r++;
+         // Example to declare a Left Menu entry into an existing Top menu entry:
+        $this->menu[$r] = array('fk_menu' => 'fk_mainmenu=educo,fk_leftmenu=teacher', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type' => 'left', // This is a Left menu entry
+            'titre' => 'ListClass',
+            'mainmenu' => 'educo',
+            'leftmenu' => 'list_class',
+            'url' => '/educo/teacher/class.php',
+            'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'position' => 1000 + $r,
+            'enabled' => '$conf->educo->enabled', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+            'perms' => '$user->rights->educo->read', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'target' => '',
+            'user' => 2);   
+        $r++;
+         $this->menu[$r] = array('fk_menu' => 'fk_mainmenu=home,fk_leftmenu=setup', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type' => 'left', // This is a Left menu entry
+            'titre' => 'ListCalifRatings',
+            'mainmenu' => 'home',
+            'leftmenu' => 'setup',
+            'url' => '/educo/teacher/ratings.php?mainmenu=home&leftmenu=setup',
+            'langs' => 'educo@educo', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+            'position' => 1000 + $r,
+            'enabled' => '$conf->educo->enabled && (GETPOST("leftmenu")==="setup")', // Define condition to show or hide menu entry. Use '$conf->educo->enabled' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
+            'perms' => '$user->rights->educo->read', // Use 'perms'=>'$user->rights->educo->level1->level2' if you want your menu with a permission rules
+            'target' => '',
+            'user' => 2);  
+        // Example
         // Exports
         $r = 1;
+        
+        
 
         // Example:
         // $this->export_code[$r]=$this->rights_class.'_'.$r;

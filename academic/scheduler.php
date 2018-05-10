@@ -152,7 +152,7 @@ $js = array(
 //isprint=GETPOST('optioncss')=='print');
 llxHeader('', 'Scheduler', 'manual', null, 0, 0, $js, $css);
 
-dol_fiche_head($head, 'scheduler', $langs->trans("AcademicYearCard"), 0, 'generic');
+dol_fiche_head($head, 'scheduler', $langs->trans("AcademicYearCard"), 0, 'academic@educo');
 
 //baner
 print '<div class="arearef heightref valignmiddle" width="100%">';
@@ -195,7 +195,7 @@ if (is_array($subjects_grade)) {
         $subject_codes = array('');
     if (is_array($subjects_teacher)) {
         foreach ($subjects_teacher as $s) {
-            // var_dump($s->asignature_code,$subject_codes,'<br>');
+            
             $key = !in_array($s->asignature_code, $subject_codes) ? ($s->rowid . '" disabled="disabled' ) : $s->rowid;
             $array[$key] = $s->subject_label;
         }
@@ -211,7 +211,8 @@ print '<br>';
     <thead>
         <tr class="liste_titre">
             <th class="liste_titre" id="title_grade"><?php print $group->label ?></th>
-            <th class="liste_titre" id="title_teacher"><?php print $teacher->getFullName($langs) ?></th>
+            <?php if($teacherid>0)$hoursteacher= teacherHours($academicid, $teacherid)?>
+            <th class="liste_titre" id="title_teacher"><?php print $teacher->getFullName($langs) .($hoursteacher>0?' ('.$hoursteacher.' horas)':'')?></th>
         </tr>
     </thead>
     <tbody>

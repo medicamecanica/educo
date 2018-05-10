@@ -70,6 +70,17 @@ class Educostudent extends CommonObject
 	public $tms = '';
 	public $status;
 	public $import_key;
+	public $grade_max;
+	public $photo;
+	public $sex;
+	public $neighborhood;
+	public $blod_type;
+	public $stratum;
+	public $sisben;
+	public $regime;
+	public $eps;
+	public $ethnicity;
+	public $cc;
 
 	/**
 	 */
@@ -134,6 +145,39 @@ class Educostudent extends CommonObject
 		if (isset($this->import_key)) {
 			 $this->import_key = trim($this->import_key);
 		}
+		if (isset($this->grade_max)) {
+			 $this->grade_max = trim($this->grade_max);
+		}
+		if (isset($this->photo)) {
+			 $this->photo = trim($this->photo);
+		}
+		if (isset($this->sex)) {
+			 $this->sex = trim($this->sex);
+		}
+		if (isset($this->neighborhood)) {
+			 $this->neighborhood = trim($this->neighborhood);
+		}
+		if (isset($this->blod_type)) {
+			 $this->blod_type = trim($this->blod_type);
+		}
+		if (isset($this->stratum)) {
+			 $this->stratum = trim($this->stratum);
+		}
+		if (isset($this->sisben)) {
+			 $this->sisben = trim($this->sisben);
+		}
+		if (isset($this->regime)) {
+			 $this->regime = trim($this->regime);
+		}
+		if (isset($this->eps)) {
+			 $this->eps = trim($this->eps);
+		}
+		if (isset($this->ethnicity)) {
+			 $this->ethnicity = trim($this->ethnicity);
+		}
+		if (isset($this->cc)) {
+			 $this->cc = trim($this->cc);
+		}
 
 		
 
@@ -154,7 +198,18 @@ class Educostudent extends CommonObject
 		$sql.= 'date_create,';
 		$sql.= 'fk_soc,';
 		$sql.= 'status,';
-		$sql.= 'import_key';
+		$sql.= 'import_key,';
+		$sql.= 'grade_max,';
+		$sql.= 'photo,';
+		$sql.= 'sex,';
+		$sql.= 'neighborhood,';
+		$sql.= 'blod_type,';
+		$sql.= 'stratum,';
+		$sql.= 'sisben,';
+		$sql.= 'regime,';
+		$sql.= 'eps,';
+		$sql.= 'ethnicity,';
+		$sql.= 'cc';
 
 		
 		$sql .= ') VALUES (';
@@ -170,7 +225,18 @@ class Educostudent extends CommonObject
 		$sql .= ' '.(! isset($this->date_create) || dol_strlen($this->date_create)==0?'NULL':"'".$this->db->idate($this->date_create)."'").',';
 		$sql .= ' '.(! isset($this->fk_soc)?'NULL':$this->fk_soc).',';
 		$sql .= ' '.(! isset($this->status)?'NULL':$this->status).',';
-		$sql .= ' '.(! isset($this->import_key)?'NULL':"'".$this->db->escape($this->import_key)."'");
+		$sql .= ' '.(! isset($this->import_key)?'NULL':"'".$this->db->escape($this->import_key)."'").',';
+		$sql .= ' '.(! isset($this->grade_max)?'NULL':$this->grade_max).',';
+		$sql .= ' '.(! isset($this->photo)?'NULL':"'".$this->db->escape($this->photo)."'").',';
+		$sql .= ' '.(! isset($this->sex)?'NULL':$this->sex).',';
+		$sql .= ' '.(! isset($this->neighborhood)?'NULL':"'".$this->db->escape($this->neighborhood)."'").',';
+		$sql .= ' '.(! isset($this->blod_type)?'NULL':"'".$this->db->escape($this->blod_type)."'").',';
+		$sql .= ' '.(! isset($this->stratum)?'NULL':"'".$this->stratum."'").',';
+		$sql .= ' '.(! isset($this->sisben)?'NULL':$this->sisben).',';
+		$sql .= ' '.(! isset($this->regime)?'NULL':$this->regime).',';
+		$sql .= ' '.(! isset($this->eps)?'NULL':"'".$this->db->escape($this->eps)."'").',';
+		$sql .= ' '.(! isset($this->ethnicity)?'NULL':$this->ethnicity).',';
+		$sql .= ' '.(! isset($this->cc)?'NULL':"'".$this->db->escape($this->cc)."'");
 
 		
 		$sql .= ')';
@@ -237,8 +303,18 @@ class Educostudent extends CommonObject
 		$sql .= " t.fk_soc,";
 		$sql .= " t.tms,";
 		$sql .= " t.status,";
-                $sql .= " t.photo,";
-		$sql .= " t.import_key";
+		$sql .= " t.import_key,";
+		$sql .= " t.grade_max,";
+		$sql .= " t.photo,";
+		$sql .= " t.sex,";
+		$sql .= " t.neighborhood,";
+		$sql .= " t.blod_type,";
+		$sql .= " t.stratum,";
+		$sql .= " t.sisben,";
+		$sql .= " t.regime,";
+		$sql .= " t.eps,";
+		$sql .= " t.ethnicity,";
+		$sql .= " t.cc";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element . ' as t';
@@ -272,8 +348,18 @@ class Educostudent extends CommonObject
 				$this->fk_soc = $obj->fk_soc;
 				$this->tms = $this->db->jdate($obj->tms);
 				$this->status = $obj->status;
-                                $this->photo = $obj->photo;
 				$this->import_key = $obj->import_key;
+				$this->grade_max = $obj->grade_max;
+				$this->photo = $obj->photo;
+				$this->sex = $obj->sex;
+				$this->neighborhood = $obj->neighborhood;
+				$this->blod_type = $obj->blod_type;
+				$this->stratum = $obj->stratum;
+				$this->sisben = $obj->sisben;
+				$this->regime = $obj->regime;
+				$this->eps = $obj->eps;
+				$this->ethnicity = $obj->ethnicity;
+				$this->cc = $obj->cc;
 
 				
 			}
@@ -333,7 +419,18 @@ class Educostudent extends CommonObject
 		$sql .= " t.fk_soc,";
 		$sql .= " t.tms,";
 		$sql .= " t.status,";
-		$sql .= " t.import_key";
+		$sql .= " t.import_key,";
+		$sql .= " t.grade_max,";
+		$sql .= " t.photo,";
+		$sql .= " t.sex,";
+		$sql .= " t.neighborhood,";
+		$sql .= " t.blod_type,";
+		$sql .= " t.stratum,";
+		$sql .= " t.sisben,";
+		$sql .= " t.regime,";
+		$sql .= " t.eps,";
+		$sql .= " t.ethnicity,";
+		$sql .= " t.cc";
 
 		
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . $this->table_element. ' as t';
@@ -383,6 +480,17 @@ class Educostudent extends CommonObject
 				$line->tms = $this->db->jdate($obj->tms);
 				$line->status = $obj->status;
 				$line->import_key = $obj->import_key;
+				$line->grade_max = $obj->grade_max;
+				$line->photo = $obj->photo;
+				$line->sex = $obj->sex;
+				$line->neighborhood = $obj->neighborhood;
+				$line->blod_type = $obj->blod_type;
+				$line->stratum = $obj->stratum;
+				$line->sisben = $obj->sisben;
+				$line->regime = $obj->regime;
+				$line->eps = $obj->eps;
+				$line->ethnicity = $obj->ethnicity;
+				$line->cc = $obj->cc;
 
 				
 
@@ -448,8 +556,38 @@ class Educostudent extends CommonObject
 		if (isset($this->import_key)) {
 			 $this->import_key = trim($this->import_key);
 		}
-                if (isset($this->photo)) {
+		if (isset($this->grade_max)) {
+			 $this->grade_max = trim($this->grade_max);
+		}
+		if (isset($this->photo)) {
 			 $this->photo = trim($this->photo);
+		}
+		if (isset($this->sex)) {
+			 $this->sex = trim($this->sex);
+		}
+		if (isset($this->neighborhood)) {
+			 $this->neighborhood = trim($this->neighborhood);
+		}
+		if (isset($this->blod_type)) {
+			 $this->blod_type = trim($this->blod_type);
+		}
+		if (isset($this->stratum)) {
+			 $this->stratum = trim($this->stratum);
+		}
+		if (isset($this->sisben)) {
+			 $this->sisben = trim($this->sisben);
+		}
+		if (isset($this->regime)) {
+			 $this->regime = trim($this->regime);
+		}
+		if (isset($this->eps)) {
+			 $this->eps = trim($this->eps);
+		}
+		if (isset($this->ethnicity)) {
+			 $this->ethnicity = trim($this->ethnicity);
+		}
+		if (isset($this->cc)) {
+			 $this->cc = trim($this->cc);
 		}
 
 		
@@ -473,7 +611,17 @@ class Educostudent extends CommonObject
 		$sql .= ' tms = '.(dol_strlen($this->tms) != 0 ? "'".$this->db->idate($this->tms)."'" : "'".$this->db->idate(dol_now())."'").',';
 		$sql .= ' status = '.(isset($this->status)?$this->status:"null").',';
 		$sql .= ' import_key = '.(isset($this->import_key)?"'".$this->db->escape($this->import_key)."'":"null").',';
-                $sql .= ' photo = '.(isset($this->photo)?"'".$this->db->escape($this->photo)."'":"null");
+		$sql .= ' grade_max = '.(isset($this->grade_max)?$this->grade_max:"null").',';
+		$sql .= ' photo = '.(isset($this->photo)?"'".$this->db->escape($this->photo)."'":"null").',';
+		$sql .= ' sex = '.(isset($this->sex)?$this->sex:"null").',';
+		$sql .= ' neighborhood = '.(isset($this->neighborhood)?"'".$this->db->escape($this->neighborhood)."'":"null").',';
+		$sql .= ' blod_type = '.(isset($this->blod_type)?"'".$this->db->escape($this->blod_type)."'":"null").',';
+		$sql .= ' stratum = '.(isset($this->stratum)?$this->stratum:"null").',';
+		$sql .= ' sisben = '.(isset($this->sisben)?$this->sisben:"null").',';
+		$sql .= ' regime = '.(isset($this->regime)?$this->regime:"null").',';
+		$sql .= ' eps = '.(isset($this->eps)?"'".$this->db->escape($this->eps)."'":"null").',';
+		$sql .= ' ethnicity = '.(isset($this->ethnicity)?$this->ethnicity:"null").',';
+		$sql .= ' cc = '.(isset($this->cc)?"'".$this->db->escape($this->cc)."'":"null");
 
         
 		$sql .= ' WHERE rowid=' . $this->id;
@@ -637,7 +785,7 @@ class Educostudent extends CommonObject
          $label.= '<br>';
         $label.= '<b>' . $langs->trans('Name') . ':</b> ' . $this->getFullName($langs);
           $label.= '<br>';
-        $label.= '<b>' . $langs->trans('Photo') . ':</b><br>' . $this->getPhotoUrl(100,'mini');
+        $label.= '<b>' . $langs->trans('Photo') . ':</b><br>' . $this->getPhotoUrl(100,'small');
 
         $url = DOL_URL_ROOT.'/educo/student/card.php?id='.$this->id;
         
@@ -660,11 +808,31 @@ class Educostudent extends CommonObject
 
         if ($withpicto)
         {
-            $result.=($linkstart.img_object(($notooltip?'':$label), 'label', ($notooltip?'':'class="classfortooltip"')).$linkend);
+            $result.=($linkstart.img_object(($notooltip?'':$label), 'student@educo', ($notooltip?'':'class="classfortooltip"')).$linkend);
             if ($withpicto != 2) $result.=' ';
 		}
 		$result.= $linkstart . $this->ref . $linkend;
 		return $result;
+	}
+ /**
+	 *  Return a link with photo
+	 * 	Use this->id,this->photo
+	 *
+	 *	@param	int		$width			Width of image
+	 *	@param	int		$height			Height of image
+	 *  @param	string	$cssclass		Force a css class
+     * 	@param	string	$imagesize		'mini', 'small' or '' (original)
+	 *	@return	string					String with URL link
+	 */
+	function getPhotoUrl($width, $height, $cssclass='', $imagesize='')
+	{
+		$result='';
+
+		$result.='<a href="'.DOL_URL_ROOT.'/user/card.php?id='.$this->id.'">';
+	    $result.=Form::showphoto('educo', $this, $width, $height, 0, $cssclass, $imagesize);
+	    $result.='</a>';
+
+	    return $result;
 	}
 
 	/**
@@ -751,29 +919,51 @@ class Educostudent extends CommonObject
 		$this->tms = '';
 		$this->status = '';
 		$this->import_key = '';
+		$this->grade_max = '';
+		$this->photo = '';
+		$this->sex = '';
+		$this->neighborhood = '';
+		$this->blod_type = '';
+		$this->stratum = '';
+		$this->sisben = '';
+		$this->regime = '';
+		$this->eps = '';
+		$this->ethnicity = '';
+		$this->cc = '';
 
 		
 	}
-        /**
-	 *  Return a link with photo
-	 * 	Use this->id,this->photo
-	 *
-	 *	@param	int		$width			Width of image
-	 *	@param	int		$height			Height of image
-	 *  @param	string	$cssclass		Force a css class
-     * 	@param	string	$imagesize		'mini', 'small' or '' (original)
-	 *	@return	string					String with URL link
-	 */
-	function getPhotoUrl($width, $height, $cssclass='', $imagesize='')
-	{
-		$result='';
+              /**
+     *  Create a document onto disk according to template module.
+     *
+     *  @param	    string		$modele			Force template to use ('' to not force)
+     *  @param		Translate	$outputlangs	objet lang a utiliser pour traduction
+     *  @param      int			$hidedetails    Hide details of lines
+     *  @param      int			$hidedesc       Hide description
+     *  @param      int			$hideref        Hide ref
+     *  @return     int         				0 if KO, 1 if OK
+     */
+    public function generateDocument($modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0)
+    {
+        global $conf,$langs;
 
-		$result.='<a href="'.DOL_URL_ROOT.'/user/card.php?id='.$this->id.'">';
-	    $result.=Form::showphoto('educo', $this, $width, $height, 0, $cssclass, $imagesize);
-	    $result.='</a>';
+        $langs->load("orders");
 
-	    return $result;
-	}
+		if (! dol_strlen($modele)) {
+
+//		    $modele = 'standard';
+//
+//		    if ($this->modelpdf) {
+//			    $modele = $this->modelpdf;
+//		    } elseif (! empty($conf->global->ADHERENT_ADDON_PDF)) {
+//			    $modele = $conf->global->ADHERENT_ADDON_PDF;
+//		    }
+	    }
+
+        $modelpath = "educo/doc/";
+
+        return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
+    }
 
 }
 
@@ -803,6 +993,17 @@ class EducostudentLine
 	public $tms = '';
 	public $status;
 	public $import_key;
+	public $grade_max;
+	public $photo;
+	public $sex;
+	public $neighborhood;
+	public $blod_type;
+	public $stratum;
+	public $sisben;
+	public $regime;
+	public $eps;
+	public $ethnicity;
+	public $cc;
 
 	/**
 	 * @var mixed Sample line property 2

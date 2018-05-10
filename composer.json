@@ -1,0 +1,11 @@
+{
+    "name": "vendor/educo",
+    "description": "Description of project educo.",
+    "authors": [
+        {
+            "name": "Andersson",
+            "email": "npander@hotmail.com"
+        }
+    ],
+    "require": {}
+}
